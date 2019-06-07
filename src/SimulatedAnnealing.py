@@ -49,18 +49,22 @@ class SimulatedAnnealing(Optimiser):
     # \param aCostFunction: The cost function to minimise
     # \param aTemperature: The initial temperature of the system (default value: 10,000)
     # \param aCoolingRate: The cooling rate (i.e. how fast the temperature will decrease) (default value: 0.003)
-    def __init__(self, aCostFunction, aTemperature = 10000, aCoolingRate = 0.003):
+    def __init__(self, aCostFunction, aTemperature = 10000, aCoolingRate = 0.003, initial_guess = None):
 
-        super().__init__(aCostFunction);
+        super().__init__(aCostFunction, initial_guess);
 
         # Get a SystemRandom instance out of random package
         self.system_random = random.SystemRandom();
 
+        # Add initial guess if any
+        if self.initial_guess != None:
+            self.current_solution = Solution(initial_guess);
         # Create the current solution from random
-        parameter_set = [];
-        for i in range(self.objective_function.number_of_dimensions):
-            parameter_set.append(self.system_random.uniform(self.objective_function.boundary_set[i][0], self.objective_function.boundary_set[i][1]));
-        self.current_solution = Solution(parameter_set);
+        else:
+            parameter_set = [];
+            for i in range(self.objective_function.number_of_dimensions):
+                parameter_set.append(self.system_random.uniform(self.objective_function.boundary_set[i][0], self.objective_function.boundary_set[i][1]));
+            self.current_solution = Solution(parameter_set);
 
         # and copy input parameters
         self.initial_temperature = aTemperature;

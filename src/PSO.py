@@ -3,9 +3,9 @@ from Particle import *
 
 class PSO(Optimiser):
 
-    def __init__(self, aCostFunction, aNumberOfParticles):
+    def __init__(self, aCostFunction, aNumberOfParticles, initial_guess = None):
 
-        super().__init__(aCostFunction);
+        super().__init__(aCostFunction, initial_guess);
 
         # Save the best particle at each iteration
         #self.best_solution_set = [];
@@ -15,6 +15,10 @@ class PSO(Optimiser):
 
         # Keep track of the best particle
         best_particle_index = 0;
+
+        # Add initial guess if any
+        if self.initial_guess != None:
+            self.current_solution_set.append(Particle(self.objective_function.number_of_dimensions, self.objective_function.boundary_set, aCostFunction, self, self.initial_guess));
 
         # Create the particles
         while len(self.current_solution_set) < aNumberOfParticles:

@@ -25,17 +25,13 @@ class Particle:
         # Store the PSO
         self.pso = aPSO;
 
-        # Copy the particle position and velocity
-        if aPosition != None and aVelocity != None:
-            if len(aPosition) == aNumberOfDimentions and len(aVelocity) == aNumberOfDimentions:
-                self.position = copy.deepcopy(aPosition);
-                self.velocity = copy.deepcopy(aVelocity);
+        # Copy the particle position
+        if aPosition != None and len(aPosition) == aNumberOfDimentions:
+            self.position = copy.deepcopy(aPosition);
 
-        # Initialise the particle's position and velocity
-        if len(self.position) == 0 or len(self.velocity) == 0:
-
+        # Initialise the particle's position
+        if len(self.position) == 0:
             self.position = []
-            self.velocity = []
 
             for i in range(aNumberOfDimentions):
                 # Get the boundaries
@@ -44,6 +40,15 @@ class Particle:
 
                 # Compute the position
                 self.position.append(Particle.system_random.uniform(min_i, max_i));
+
+        # Initialise the particle's velocity
+        if len(self.velocity) == 0:
+            self.velocity = []
+
+            for i in range(aNumberOfDimentions):
+                # Get the boundaries
+                min_i = self.boundary_set[i][0];
+                max_i = self.boundary_set[i][1];
 
                 # Compute the velocity
                 self.velocity.append((Particle.system_random.uniform(min_i, max_i) - self.position[i]) / 2.0);
@@ -101,7 +106,6 @@ class Particle:
             new_position.append(pos_i)
 
         self.position = copy.deepcopy(new_position)
-
         self.computeObjectiveFunction();
 
     def getParameter(self, i):
