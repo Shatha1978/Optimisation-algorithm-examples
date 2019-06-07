@@ -29,32 +29,46 @@ methods = ['Nelder-Mead',
     'L-BFGS-B',
     'TNC',
     'COBYLA',
-    'SLSQP'];
+    'SLSQP'
+];
 
 number_of_evaluation_set = [];
 solution_set = [];
 initial_guess = test_problem.initialGuess();
 
+max_iterations = 0;
+
 for method in methods:
     test_problem.number_of_evaluation = 0;
 
-    if method == 'Nelder-Mead' or method == 'Powell' or method == 'COBYLA':
+    print ("Run ", method);
+    test_problem.number_of_evaluation = 0;
+    test_problem.global_fitness = -float('inf');
+
+    if method == 'Nelder-Mead' or method == 'CG' or method == 'Powell' or method == 'BFGS' or method == 'L-BFGS-B' or method == 'TNC' or method == 'COBYLA' or method == 'SLSQP':
         result = optimize.minimize(test_problem.minimisationFunction,
             initial_guess,
-            method=method);
+            method=method,
+            bounds=test_problem.boundaries);
     else:
         result = optimize.minimize(test_problem.minimisationFunction,
             initial_guess,
             method=method,
+            bounds=test_problem.boundaries,
             jac='2-point');
+
+    if max_iterations < test_problem.number_of_evaluation:
+        max_iterations = test_problem.number_of_evaluation;
+
+    print(method, ".number_of_evaluation:\t", test_problem.number_of_evaluation)
 
     number_of_evaluation_set.append(test_problem.number_of_evaluation);
     solution_set.append(result.x);
 
 
 # Parameters for EA
-g_number_of_individuals = 20;
-g_iterations            = int(211 / 20);
+g_iterations            = 100;
+g_number_of_individuals = int(max_iterations / g_iterations) + 1;
 
 g_max_mutation_sigma = 0.1;
 g_min_mutation_sigma = 0.01;
