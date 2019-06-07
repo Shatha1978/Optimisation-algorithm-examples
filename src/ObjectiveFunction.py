@@ -22,13 +22,22 @@ class ObjectiveFunction:
         self.global_optimum = None;
         self.verbose = False;   # Use for debugging
 
-    def initialGuess(self):
+    def initialRandomGuess(self):
         if self.number_of_dimensions == 1:
             return ObjectiveFunction.system_random.uniform(self.boundary_set[0][0], self.boundary_set[0][1]);
         else:
             guess = [];
             for i in range(self.number_of_dimensions):
                 guess.append(ObjectiveFunction.system_random.uniform(self.boundary_set[i][0], self.boundary_set[i][1]))
+            return guess;
+
+    def initialGuess(self):
+        if self.number_of_dimensions == 1:
+            return self.boundary_set[0][0] + (self.boundary_set[0][1] - self.boundary_set[0][0]) / 2;
+        else:
+            guess = [];
+            for i in range(self.number_of_dimensions):
+                guess.append(self.boundary_set[i][0] + (self.boundary_set[i][1] - self.boundary_set[i][0]) / 2);
             return guess;
 
     def minimisationFunction(self, aParameterSet):
