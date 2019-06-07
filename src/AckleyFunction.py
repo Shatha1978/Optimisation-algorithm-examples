@@ -20,12 +20,12 @@ class AckleyFunction(ObjectiveFunction):
 
         number_of_dimensions = 2;
 
-        boundaries = [];
+        self.boundaries = [];
         for i in range(number_of_dimensions):
-            boundaries.append([-5,5]);
+            self.boundaries.append([-5,5]);
 
         super().__init__(number_of_dimensions,
-                         boundaries,
+                         self.boundaries,
                          objectiveFunction,
                          1);
 
