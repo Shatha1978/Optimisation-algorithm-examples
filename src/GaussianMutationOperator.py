@@ -33,7 +33,7 @@ class GaussianMutationOperator(GeneticOperator.GeneticOperator):
         parent_index = anEA.selection_operator.select(anEA.current_solution_set)
 
         # Copy the parent into a child
-        child = copy.deepcopy(anEA.current_solution_set[parent_index]);
+        child = anEA.current_solution_set[parent_index].copy();
 
         # Mutate the child and return it
         return self.mutate(child);
