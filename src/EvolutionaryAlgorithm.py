@@ -55,7 +55,7 @@ class EvolutionaryAlgorithm(Optimiser):
                     set_of_individuals.append(gene);
 
             self.global_fitness_function = aGlobalFitnessFunction;
-            self.global_fitness = self.global_fitness_function.evaluate(set_of_individuals, 2);
+            self.global_fitness = self.global_fitness_function.evaluate(set_of_individuals, self.global_fitness_function.flag);
 
         # Compute the fitness value of all the individual
         # And keep track of who is the best individual
@@ -161,10 +161,10 @@ class EvolutionaryAlgorithm(Optimiser):
                 for gene in ind.genes:
                     set_of_individuals.append(gene);
 
-            temp = self.global_fitness_function.evaluate(set_of_individuals, 2);
+            temp = self.global_fitness_function.evaluate(set_of_individuals, self.global_fitness_function.flag);
 
             # The global fitness is improving
-            if self.global_fitness < temp:
+            if (self.global_fitness_function.flag == 1 and self.global_fitness > temp) or (self.global_fitness_function.flag == 2 and self.global_fitness < temp):
                 # Store the new population
                 self.best_solution = copy.deepcopy(offspring_population);
 
