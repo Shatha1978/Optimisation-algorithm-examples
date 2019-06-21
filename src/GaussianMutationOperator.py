@@ -45,6 +45,6 @@ class GaussianMutationOperator(GeneticOperator.GeneticOperator):
             anIndividual.genes[i] = max(anIndividual.boundary_set[i][0], anIndividual.genes[i]);
             anIndividual.genes[i] = min(anIndividual.boundary_set[i][1], anIndividual.genes[i]);
 
-        anIndividual.computeObjectiveFunction();
+        #anIndividual.computeObjectiveFunction();
 
         return anIndividual;
