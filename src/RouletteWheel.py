@@ -20,6 +20,10 @@ class RouletteWheel(SelectionOperator):
     def __select__(self, anIndividualSet, aFlag): # aFlag == True for selecting good individuals,
                                                   # aFlag == False for selecting bad individuals,
 
+
+        if aFlag == False:
+            raise NotImplementedError("Selecting a bad individual is not implemented in RouletteWheel!")
+
         # Random number between(0 - self.sum_fitness)
         random_number = self.system_random.uniform(0.0, self.sum_fitness)
 

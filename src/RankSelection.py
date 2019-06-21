@@ -32,6 +32,9 @@ class RankSelection(SelectionOperator):
     def __select__(self, anIndividualSet, aFlag): # aFlag == True for selecting good individuals,
                                                   # aFlag == False for selecting bad individuals,
 
+        if aFlag == False:
+            raise NotImplementedError("Selecting a bad individual is not implemented in RankSelection!")
+
         # Random number between(0 - self.sum_rank)
         random_number = self.system_random.uniform(0, self.sum_rank)
 

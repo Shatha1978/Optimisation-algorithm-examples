@@ -189,3 +189,85 @@ class EvolutionaryAlgorithm(Optimiser):
 
         # Return the best individual
         return self.best_solution;
+
+
+    def runSteadyState(self):
+
+        if self.selection_operator == None:
+            raise NotImplementedError("A selection operator has to be added")
+
+        # Compute the sum of all the operators' probability
+        probability_sum = 0.0;
+        for genetic_opterator in self.genetic_opterator_set:
+            probability_sum += genetic_opterator.getProbability();
+
+        # Evolutionary loop
+        for i in range(len(self.current_solution_set)):
+
+            # Draw a random number between 0 and 1 minus the probability of elitism
+            chosen_operator = self.system_random.uniform(0.0, probability_sum)
+
+            accummulator = 0.0;
+
+            added_a_new_child = False;
+
+            # Find which operator to use
+            for genetic_opterator in self.genetic_opterator_set:
+
+                # Discard the elitism
+                # (it does not make sence in a steady-state EA)
+                if genetic_opterator.getName() != "Elitism operator":
+
+                    # Make sure a new individual has not been created as yet
+                    if added_a_new_child == False:
+
+                        accummulator += genetic_opterator.getProbability();
+
+                        # This is the right operator
+                        if (chosen_operator <= accummulator):
+
+                            # Find a candidate for death
+                            bad_individual_ID = self.selection_operator.selectBad(self.current_solution_set);
+
+                            # Create a new child and replaced the other one
+                            self.current_solution_set[bad_individual_ID] = genetic_opterator.apply(self);
+
+                            # A child has been created
+                            added_a_new_child = True;
+
+                            # Compute the global fitness
+                            if self.global_fitness_function:
+
+                                set_of_individuals = [];
+                                for ind in self.current_solution_set:
+                                    for gene in ind.genes:
+                                        set_of_individuals.append(gene);
+
+                                temp = self.global_fitness_function.evaluate(set_of_individuals, self.global_fitness_function.flag);
+
+                                # The global fitness is improving
+                                if (self.global_fitness_function.flag == 1 and self.global_fitness > temp) or (self.global_fitness_function.flag == 2 and self.global_fitness < temp):
+                                    # Store the new population
+                                    self.best_solution = copy.deepcopy(self.current_solution_set);
+
+                                    # Save the new global fitness
+                                    self.global_fitness = temp;
+
+
+        # Not using Parisian evolution
+        if self.global_fitness_function == 0:
+
+            # Compute the fitness value of all the individual
+            # And keep track of who is the best individual
+            best_individual_index = 0;
+
+            for child in self.current_solution_set:
+                child.computeObjectiveFunction();
+                if (self.current_solution_set[best_individual_index].fitness < child.fitness):
+                    best_individual_index = self.current_solution_set.index(child);
+
+            # Store the best individual
+                self.best_solution = self.current_solution_set[best_individual_index].copy();
+
+        # Return the best individual
+        return self.best_solution;
