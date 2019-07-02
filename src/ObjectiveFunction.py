@@ -55,9 +55,13 @@ class ObjectiveFunction:
 
         return objective_value;
 
-    def getDistanceToGlobalOptimum(self, aParameterSet):
-        if self.global_optimum != None:
-            distance = 0.0;
-            for t, r in zip(aParameterSet, self.global_optimum):
-                distance += math.pow(t - r, 2);
-            return math.sqrt(distance);
+    def getDistanceToGlobalOptimum(self, aParameterSet) -> float:
+
+        if self.global_optimum == None:
+            return float('NaN');
+
+        distance = 0.0;
+        for t, r in zip(aParameterSet, self.global_optimum):
+            distance += math.pow(t - r, 2);
+
+        return math.sqrt(distance);
