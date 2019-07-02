@@ -6,6 +6,7 @@ matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import animation
+from matplotlib import cm
 
 def frange(start, stop, step):
     i = start
@@ -38,13 +39,17 @@ class Optimiser:
         Y = [];
         Z = [];
 
-        for y in frange(self.objective_function.boundary_set[0][0], self.objective_function.boundary_set[0][1], 0.05):
+        offset_x = (self.objective_function.boundary_set[1][1] - self.objective_function.boundary_set[1][0]) / 26
+
+        offset_y = (self.objective_function.boundary_set[0][1] - self.objective_function.boundary_set[0][0]) / 26
+
+        for y in frange(self.objective_function.boundary_set[0][0], self.objective_function.boundary_set[0][1] + offset_y, offset_y):
             #
             Temp_X = [];
             Temp_Y = [];
             Temp_Z = [];
             #
-            for x in frange(self.objective_function.boundary_set[1][0], self.objective_function.boundary_set[1][1], 0.05):
+            for x in frange(self.objective_function.boundary_set[1][0], self.objective_function.boundary_set[1][1] + offset_x, offset_x):
                 genes = [x, y];
                 objective_value = self.evaluate(genes);
                 Temp_X.append(x);
@@ -58,13 +63,18 @@ class Optimiser:
         self.objective_function.number_of_evaluation = 0;
 
         # Plot a basic wireframe.
-        ax.plot_wireframe(np.array(X), np.array(Y), np.array(Z), rstride=10, cstride=10)
+        #surf = ax.plot_wireframe(np.array(X), np.array(Y), np.array(Z))
+        surf = ax.plot_surface(np.array(X), np.array(Y), np.array(Z), cmap=cm.jet, alpha=0.2)
+
+        # Add a color bar which maps values to colors.
+        #fig.colorbar(surf, shrink=0.5, aspect=5)
+
 
         # Plot the current best
-        scat1 = ax.scatter([], [], [], marker='o', c='r', s=30)
+        scat1 = ax.scatter([], [], [], marker='o', c='r', s=50)
 
         # Plot the current population
-        scat2 = ax.scatter([], [], [], marker='o', c='g', s=10)
+        scat2 = ax.scatter([], [], [], marker='o', c='g', s=30)
 
         return fig, scat1, scat2;
 
