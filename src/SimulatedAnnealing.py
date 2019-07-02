@@ -70,6 +70,8 @@ class SimulatedAnnealing(Optimiser):
         self.initial_temperature = aTemperature;
         self.cooling_rate = aCoolingRate;
 
+        self.cooling_schedule = self.defaultCooling;
+
         # Initialise attributes
         self.initStates()
 
@@ -147,10 +149,15 @@ class SimulatedAnnealing(Optimiser):
     def evaluate(self, aParameterSet):
         return self.objective_function.evaluate(aParameterSet, 1);
 
+    def defaultCooling(self):
+        self.current_temperature *= 1.0 - self.cooling_rate;
+        return (self.current_temperature);
+
     ## \brief Run one iteration of the SA algorithm.
     # \param self
     def runIteration(self):
         if self.current_temperature > 1.0:
+
             # Create a new solution depending on the current solution,
             # i.e. a neighbour
             neighbour = Solution(self.getRandomNeighbour(self.current_solution));
@@ -170,8 +177,7 @@ class SimulatedAnnealing(Optimiser):
             self.logCurrentState();
 
             # Cool the system
-            self.current_temperature *= 1.0 - self.cooling_rate;
-
+            self.current_temperature = self.cooling_schedule();
 
     ## \brief Run the optimisation.
     # \param self
