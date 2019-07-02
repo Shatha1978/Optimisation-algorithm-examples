@@ -4,6 +4,8 @@ from scipy import optimize
 
 from AckleyFunction import *
 
+import pandas as pd
+
 from PSO import *
 from SimulatedAnnealing import *
 from EvolutionaryAlgorithm import *
@@ -19,9 +21,20 @@ from BlendCrossoverOperator   import *
 from GaussianMutationOperator import *
 from NewBloodOperator         import *
 
+# Store the results for each optimisation method
+columns = ['Methods','x','y','Euclidean distance', 'Number of evaluations'];
+df = pd.DataFrame (columns = columns);
 
-test_problem = AckleyFunction();
+# Stopping criteria
+max_iterations = 100;
 
+# Instantiate the objective function
+test_problem = AckleyFunction(2);
+
+# Create a random guess common to all the optimisation methods
+initial_guess = test_problem.initialRandomGuess();
+
+# Optimisation methods implemented in scipy.optimize
 methods = ['Nelder-Mead',
     'Powell',
     'CG',
@@ -32,43 +45,40 @@ methods = ['Nelder-Mead',
     'SLSQP'
 ];
 
-number_of_evaluation_set = [];
-solution_set = [];
-initial_guess = test_problem.initialGuess();
-
-max_iterations = 0;
-
 for method in methods:
     test_problem.number_of_evaluation = 0;
 
-    print ("Run ", method);
-    test_problem.number_of_evaluation = 0;
-    test_problem.global_fitness = -float('inf');
+    # Methods that cannot handle constraints or bounds.
+    if method == 'Nelder-Mead' or method == 'Powell' or method == 'CG' or method == 'BFGS' or method == 'COBYLA':
 
-    if method == 'Nelder-Mead' or method == 'CG' or method == 'Powell' or method == 'BFGS' or method == 'L-BFGS-B' or method == 'TNC' or method == 'COBYLA' or method == 'SLSQP':
         result = optimize.minimize(test_problem.minimisationFunction,
             initial_guess,
             method=method,
-            bounds=test_problem.boundaries);
+            options={'maxiter': max_iterations});
+
+    elif method == 'L-BFGS-B' or method == 'TNC' or method == 'SLSQP':
+        result = optimize.minimize(test_problem.minimisationFunction,
+            initial_guess,
+            method=method,
+            bounds=test_problem.boundaries,
+            options={'maxiter': max_iterations});
+
     else:
         result = optimize.minimize(test_problem.minimisationFunction,
             initial_guess,
             method=method,
             bounds=test_problem.boundaries,
-            jac='2-point');
+            jac='2-point',
+            options={'maxiter': max_iterations});
 
-    if max_iterations < test_problem.number_of_evaluation:
-        max_iterations = test_problem.number_of_evaluation;
+    data = [[method, result.x[0], result.x[1], test_problem.getDistanceToGlobalOptimum(result.x), test_problem.number_of_evaluation]];
 
-    print(method, ".number_of_evaluation:\t", test_problem.number_of_evaluation)
-
-    number_of_evaluation_set.append(test_problem.number_of_evaluation);
-    solution_set.append(result.x);
+    df = df.append(pd.DataFrame(data, columns = columns));
 
 
 # Parameters for EA
-g_iterations            = 100;
-g_number_of_individuals = int(max_iterations / g_iterations) + 1;
+g_number_of_individuals            = 100;
+g_iterations = int(max_iterations / g_number_of_individuals) + 1;
 
 g_max_mutation_sigma = 0.1;
 g_min_mutation_sigma = 0.01;
@@ -80,7 +90,8 @@ def visualisationCallback():
 
     # Update the mutation variance so that it varies linearly from g_max_mutation_sigma to
     # g_min_mutation_sigma
-    g_current_sigma -= (g_max_mutation_sigma - g_min_mutation_sigma) / (g_iterations - 1);
+    if g_iterations > 1:
+        g_current_sigma -= (g_max_mutation_sigma - g_min_mutation_sigma) / (g_iterations - 1);
 
     # Make sure the mutation variance is up-to-date
     gaussian_mutation.setMutationVariance(g_current_sigma);
@@ -109,37 +120,22 @@ optimiser.addGeneticOperator(elitism);
 
 test_problem.number_of_evaluation = 0;
 optimiser.plotAnimation(g_iterations, visualisationCallback);
-EA_number_of_evaluation = test_problem.number_of_evaluation
-EA_solution = optimiser.best_solution;
+data = [["EA", optimiser.best_solution.genes[0], optimiser.best_solution.genes[1], test_problem.getDistanceToGlobalOptimum(optimiser.best_solution.genes), test_problem.number_of_evaluation]];
+df = df.append(pd.DataFrame(data, columns = columns));
 
 # Optimisation and visualisation
 test_problem.number_of_evaluation = 0;
 optimiser = PSO(test_problem, g_number_of_individuals);
 optimiser.plotAnimation(g_iterations);
-PSO_number_of_evaluation = test_problem.number_of_evaluation
-PSO_solution = optimiser.best_solution;
+data = [["PSO", optimiser.best_solution.position[0], optimiser.best_solution.position[1], test_problem.getDistanceToGlobalOptimum(optimiser.best_solution.position), test_problem.number_of_evaluation]];
+df = df.append(pd.DataFrame(data, columns = columns));
 
 
 # Optimisation and visualisation
 test_problem.number_of_evaluation = 0;
 optimiser = SimulatedAnnealing(test_problem, 5000, 0.04);
 optimiser.plotAnimation(211);
-SA_number_of_evaluation = test_problem.number_of_evaluation
-SA_solution = optimiser.best_solution;
+data = [["SA", optimiser.best_solution.parameter_set[0], optimiser.best_solution.parameter_set[1], test_problem.getDistanceToGlobalOptimum(optimiser.best_solution.parameter_set), test_problem.number_of_evaluation]];
+df = df.append(pd.DataFrame(data, columns = columns));
 
-
-for method, number_of_evaluation, solution in zip(methods, number_of_evaluation_set, solution_set):
-    print(method, ".number_of_evaluation:\t", number_of_evaluation)
-    print(method, " solution:\t", solution, "\tdistance:\t", test_problem.getDistanceToGlobalOptimum(solution));
-    print()
-
-
-print("EA.number_of_evaluation:\t", EA_number_of_evaluation)
-print("EA solution:\t", EA_solution, "\tdistance:\t", test_problem.getDistanceToGlobalOptimum(EA_solution.genes));
-print()
-print("PSO.number_of_evaluation:\t", PSO_number_of_evaluation)
-print("PSO solution:\t", PSO_solution, "\tdistance:\t", test_problem.getDistanceToGlobalOptimum(PSO_solution.position));
-print()
-print("SA.number_of_evaluation:\t", SA_number_of_evaluation)
-print("SA solution:\t", SA_solution, "\tdistance:\t", test_problem.getDistanceToGlobalOptimum(SA_solution.parameter_set));
-print()
+print(df)
