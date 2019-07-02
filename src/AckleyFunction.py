@@ -1,32 +1,66 @@
+# Import the math package to compute the objective Function
 import math
 
+# Import the superclass (also called base class), which is an abstract class,
+# to implement the subclass AckleyFunction
 from ObjectiveFunction import *
 
-def objectiveFunction(aSolution):
 
-    # Function:
-    #   f(x,y)=-20&amp;\exp \left[-0.2{\sqrt {0.5\left(x^{2}+y^{2}\right)}}\right]\\&amp;{}-\exp \left[0.5\left(\cos 2\pi x+\cos 2\pi y\right)\right]+e+20}}
-    # In LaTeX
-
-    cost = 0.0;
-    cost += -20.0 * math.exp(0.2 * -(math.sqrt(math.pow(aSolution[0], 2) + math.pow(aSolution[1], 2))));
-    cost += - math.exp(0.5 * (math.cos(2.0 * math.pi * aSolution[0]) + math.cos(2.0 * math.pi * aSolution[1])));
-    cost += math.e + 20.0;
-
-    return cost;
-
+# The subclass that inherits of ObjectiveFunction
 class AckleyFunction(ObjectiveFunction):
-    def __init__(self):
 
-        number_of_dimensions = 2;
+    # Constructor
+    # aNumberOfDimensions: the number of dimensions
+    def __init__(self, aNumberOfDimensions):
 
+        """
+        For a definition of the Ackley function, see https://www.sfu.ca/~ssurjano/ackley.html or https://en.wikipedia.org/wiki/Ackley_function
+
+        Input Domain (formatted using LaTex):
+            x_i \in [-32.768, 32.768], \forall i =0, \dots, d-1
+
+        Global Minimum (formatted using LaTex):
+            f(\mathbf{x^*})= 0, \text{ at } \mathbf{x^*} = (0, \dots, 0)
+        """
+
+        # Store the boundaries
         self.boundaries = [];
-        for i in range(number_of_dimensions):
-            self.boundaries.append([-5,5]);
+        for i in range(aNumberOfDimensions):
+            self.boundaries.append([-32.768, 32.768]);
 
-        super().__init__(number_of_dimensions,
+        # Call the constructor of the superclass
+        super().__init__(aNumberOfDimensions,
                          self.boundaries,
-                         objectiveFunction,
+                         self.objectiveFunction,
                          1);
 
-        self.global_optimum = [0, 0];
+        # Store the global optimum
+        self.global_optimum = [];
+        for i in range(self.number_of_dimensions):
+            self.global_optimum.append(0.0);
+
+        # Typical values: a = 20, b = 0.2 and c = 2pi.
+        self.a = 20;
+        self.b = 0.2;
+        self.c = 2 * math.pi;
+
+
+    # objectiveFunction implements the Ackley function
+    def objectiveFunction(self, aSolution) -> float:
+        """ Return a float
+
+            x_i = aSolution[i];
+
+            returns (formatted using LaTex)
+            f(\mathbf{x^*})=-a \exp \left[-b{\sqrt {\frac{1}{d}\sum_{i=0}^{i<d} x_i^{2}}}\right] - \exp \left[\frac{1}{d}\sum_{i=0}^{i<d} \cos c x_i\right]+a+\exp(1)
+        """
+
+        M = 0;
+        N = 0;
+        O = 1 / self.number_of_dimensions;
+
+        for i in range(self.number_of_dimensions):
+            M += math.pow(aSolution[i], 2);
+            N += math.cos(self.c * aSolution[i]);
+
+        return -self.a * math.exp(-self.b * math.sqrt(O * M)) - math.exp(O * N) + self.a + math.e;
