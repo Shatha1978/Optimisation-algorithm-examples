@@ -57,7 +57,7 @@ class TournamentSelection(SelectionOperator):
         # (maxiumisation)
         # good individual
         if aFlag == True:
-            return numpy.argmax(fitness_set)
+            return np.argmax(fitness_set)
         # bad individual
         else:
-            return numpy.argmin(fitness_set)
+            return np.argmin(fitness_set)
