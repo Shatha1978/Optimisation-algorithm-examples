@@ -1,6 +1,9 @@
 # Import the math package to compute the objective Function
 import math
 
+# Support for type hints
+from typing import List
+
 # Import the superclass (also called base class), which is an abstract class,
 # to implement the subclass AckleyFunction
 from ObjectiveFunction import *
@@ -10,8 +13,8 @@ from ObjectiveFunction import *
 class AckleyFunction(ObjectiveFunction):
 
     # Constructor
-    # aNumberOfDimensions: the number of dimensions
-    def __init__(self, aNumberOfDimensions):
+    # aNumberOfDimensions: the number of dimensions (e.g. how many parameters)
+    def __init__(self, aNumberOfDimensions: int):
 
         """
         For a definition of the Ackley function, see https://www.sfu.ca/~ssurjano/ackley.html or https://en.wikipedia.org/wiki/Ackley_function
@@ -46,7 +49,8 @@ class AckleyFunction(ObjectiveFunction):
 
 
     # objectiveFunction implements the Ackley function
-    def objectiveFunction(self, aSolution) -> float:
+    def objectiveFunction(self, aSolution: List[float]
+) -> float:
         """ Return a float
 
             x_i = aSolution[i];
