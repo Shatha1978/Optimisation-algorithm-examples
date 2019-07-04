@@ -22,6 +22,8 @@ class Optimiser:
         self.visualisation_callback = None;
         self.verbose = False;
         self.initial_guess = initial_guess;
+        self.full_name = "Unknown optimiser";
+        self.short_name = "Unknown optimiser";
 
     def runIteration(self):
         raise NotImplementedError("Subclasses should implement this!")
@@ -124,6 +126,13 @@ class Optimiser:
         if len(self.objective_function.boundary_set) == 2:
             # Create a figure (Matplotlib)
             fig, self.scat1, self.scat2 = self.createFigure();
+
+            if self.objective_function.name != "":
+                title = self.objective_function.name + "\n" + self.full_name;
+            else:
+                title = self.full_name;
+
+            plt.title(title);
 
             # Run the visualisation
             numframes = aNumberOfIterations + 1;

@@ -14,6 +14,10 @@ class EvolutionaryAlgorithm(Optimiser):
 
         super().__init__(aFitnessFunction, initial_guess);
 
+        # Name of the algorithm
+        self.full_name = "Evolutionary Algorithm";
+        self.short_name = "EA";
+
         # Get a SystemRandom instance out of random package
         self.system_random = random.SystemRandom();
 

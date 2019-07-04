@@ -25,6 +25,10 @@ class PureRandomSearch(Optimiser):
 
         super().__init__(aCostFunction, initial_guess);
 
+        # Name of the algorithm
+        self.full_name = "Pure Random Search";
+        self.short_name = "PRS";
+
         # Get a SystemRandom instance out of random package
         self.system_random = random.SystemRandom();
 

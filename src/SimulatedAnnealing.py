@@ -27,6 +27,10 @@ class SimulatedAnnealing(Optimiser):
 
         super().__init__(aCostFunction, initial_guess);
 
+        # Name of the algorithm
+        self.full_name = "Simulated Annealing";
+        self.short_name = "SA";
+
         # Get a SystemRandom instance out of random package
         self.system_random = random.SystemRandom();
 

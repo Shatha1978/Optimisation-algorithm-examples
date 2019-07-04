@@ -131,7 +131,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
             for i in range(max_iterations):
                 optimiser.runIteration();
 
-        data = [[run_id, "PRS", optimiser.best_solution.parameter_set[0], optimiser.best_solution.parameter_set[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.parameter_set), float(test_problem.number_of_evaluation)]];
+        data = [[run_id, optimiser.short_name, optimiser.best_solution.parameter_set[0], optimiser.best_solution.parameter_set[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.parameter_set), float(test_problem.number_of_evaluation)]];
         df = df.append(pd.DataFrame(data, columns = columns));
 
         # Optimisation and visualisation
@@ -163,7 +163,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
                 optimiser.runIteration();
                 visualisationCallback();
 
-        data = [[run_id, "EA", optimiser.best_solution.genes[0], optimiser.best_solution.genes[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.genes), float(test_problem.number_of_evaluation)]];
+        data = [[run_id, optimiser.short_name, optimiser.best_solution.genes[0], optimiser.best_solution.genes[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.genes), float(test_problem.number_of_evaluation)]];
         df = df.append(pd.DataFrame(data, columns = columns));
 
         # Optimisation and visualisation
@@ -176,7 +176,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
             for i in range(g_iterations - 1):
                 optimiser.runIteration();
 
-        data = [[run_id, "PSO", optimiser.best_solution.position[0], optimiser.best_solution.position[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.position), float(test_problem.number_of_evaluation)]];
+        data = [[run_id, optimiser.short_name, optimiser.best_solution.position[0], optimiser.best_solution.position[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.position), float(test_problem.number_of_evaluation)]];
         df = df.append(pd.DataFrame(data, columns = columns));
 
 
@@ -193,7 +193,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
                 optimiser.runIteration();
             #print(optimiser.current_temperature)
 
-        data = [[run_id, "SA", optimiser.best_solution.parameter_set[0], optimiser.best_solution.parameter_set[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.parameter_set), float(test_problem.number_of_evaluation)]];
+        data = [[run_id, optimiser.short_name, optimiser.best_solution.parameter_set[0], optimiser.best_solution.parameter_set[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.parameter_set), float(test_problem.number_of_evaluation)]];
         df = df.append(pd.DataFrame(data, columns = columns));
 
         df.to_csv (file_prefix + 'summary.csv', index = None, header=True)

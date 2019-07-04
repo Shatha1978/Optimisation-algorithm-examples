@@ -7,6 +7,10 @@ class PSO(Optimiser):
 
         super().__init__(aCostFunction, initial_guess);
 
+        # Name of the algorithm
+        self.full_name = "Particle Swarm Optimisation";
+        self.short_name = "PSO";
+
         # Save the best particle at each iteration
         #self.best_solution_set = [];
 
