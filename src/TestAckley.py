@@ -36,7 +36,7 @@ columns = ['Run', 'Methods','x','y','Euclidean distance', 'Evaluations'];
 df = pd.DataFrame (columns = columns);
 
 # Stopping criteria
-max_iterations = 500;
+max_iterations = 200;
 
 # Instantiate the objective function
 test_problem = AckleyFunction(2);
@@ -94,7 +94,7 @@ for run in range(number_of_runs):
                 jac='2-point',
                 options={'maxiter': max_iterations});
 
-        data = [[run, method, result.x[0], result.x[1], test_problem.getDistanceToGlobalOptimum(result.x), test_problem.number_of_evaluation]];
+        data = [[run, method, result.x[0], result.x[1], test_problem.getEuclideanDistanceToGlobalOptimum(result.x), float(test_problem.number_of_evaluation)]];
 
         df = df.append(pd.DataFrame(data, columns = columns));
 
@@ -150,7 +150,7 @@ for run in range(number_of_runs):
             optimiser.runIteration();
             visualisationCallback();
 
-    data = [[run, "EA", optimiser.best_solution.genes[0], optimiser.best_solution.genes[1], test_problem.getDistanceToGlobalOptimum(optimiser.best_solution.genes), test_problem.number_of_evaluation]];
+    data = [[run, "EA", optimiser.best_solution.genes[0], optimiser.best_solution.genes[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.genes), float(test_problem.number_of_evaluation)]];
     df = df.append(pd.DataFrame(data, columns = columns));
 
     # Optimisation and visualisation
@@ -163,7 +163,7 @@ for run in range(number_of_runs):
         for i in range(g_iterations - 1):
             optimiser.runIteration();
 
-    data = [[run, "PSO", optimiser.best_solution.position[0], optimiser.best_solution.position[1], test_problem.getDistanceToGlobalOptimum(optimiser.best_solution.position), test_problem.number_of_evaluation]];
+    data = [[run, "PSO", optimiser.best_solution.position[0], optimiser.best_solution.position[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.position), float(test_problem.number_of_evaluation)]];
     df = df.append(pd.DataFrame(data, columns = columns));
 
 
@@ -182,7 +182,7 @@ for run in range(number_of_runs):
             optimiser.runIteration();
         print(optimiser.current_temperature)
 
-    data = [[run, "SA", optimiser.best_solution.parameter_set[0], optimiser.best_solution.parameter_set[1], test_problem.getDistanceToGlobalOptimum(optimiser.best_solution.parameter_set), test_problem.number_of_evaluation]];
+    data = [[run, "SA", optimiser.best_solution.parameter_set[0], optimiser.best_solution.parameter_set[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.parameter_set), float(test_problem.number_of_evaluation)]];
     df = df.append(pd.DataFrame(data, columns = columns));
 
     df.to_csv ('summary.csv', index = None, header=True)
@@ -204,17 +204,17 @@ def boxplot(column, title, filename, sort):
     #df2[meds.index].boxplot(return_type="axes")
     #df2[['EA', 'SA', 'PRS', 'Nelder-Mead', 'CG']].boxplot(return_type="axes")
     df2.boxplot(return_type="axes")
-
+    print(df2)
     plt.title(title)
     plt.suptitle("")
     plt.xlabel('Optimisation method');
     plt.tight_layout()
     plt.autoscale()
     fig = plt.gcf()
-    fig.set_size_inches(17.5, 10.5)
+    fig.set_size_inches(30.5, 15.5)
     plt.savefig(filename, orientation='landscape', bbox_inches = "tight")
 
 
 boxplot('Evaluations',      'Number of evaluations',      'evaluations.pdf', False)
 
-boxplot('Euclidean distance',      'Euclidean distance',      'distance.pdf', False)
+boxplot('Euclidean distance',      'Euclidean distance between\nsolution and ground truth',      'distance.pdf', False)
