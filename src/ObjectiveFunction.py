@@ -36,6 +36,7 @@ class ObjectiveFunction:
         self.flag = aFlag;
         self.global_optimum = None;
         self.verbose = False;   # Use for debugging
+        self.name = "";
 
     # Generate a random solution
     def initialRandomGuess(self):

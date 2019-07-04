@@ -37,6 +37,9 @@ class AckleyFunction(ObjectiveFunction):
                          self.objectiveFunction,
                          1);
 
+        # The name of the function
+        self.name = "Ackley Function";
+
         # Store the global optimum
         self.global_optimum = [];
         for _ in range(self.number_of_dimensions):
