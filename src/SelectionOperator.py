@@ -3,7 +3,8 @@
 class SelectionOperator:
 
     # Constructor
-    def __init__(self, name = "Unspecified selection operator"):
+    # name: name of the selection operator
+    def __init__(self, name: str="Unspecified selection operator"):
         self.name = name;
 
     # Accessor on the name of the operator
