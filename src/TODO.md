@@ -7,10 +7,16 @@
  1. ObjectiveFunction.py
 
  1. SelectionOperator.py
- 1. ThresholdSelection.py
- 1. TournamentSelection.py
- 1. RouletteWheel.py
- 1. RankSelection.py      
+    1. ThresholdSelection.py
+    1. TournamentSelection.py
+    1. RouletteWheel.py
+    1. RankSelection.py      
+
+ 1. GeneticOperator.py
+ 1. BlendCrossoverOperator.py
+ 1. ElitismOperator.py
+ 1. GaussianMutationOperator.py
+ 1. NewBloodOperator.py
 
 
 ## Files that have been not checked:
@@ -22,13 +28,6 @@
 
  1. Individual.py
  1. Particle.py
-
- 1. GeneticOperator.py
-
- 1. BlendCrossoverOperator.py
- 1. ElitismOperator.py
- 1. NewBloodOperator.py
- 1. GaussianMutationOperator.py
 
  1. test_PSO.py
  1. TestAckley.py

@@ -1,13 +1,21 @@
+# Import the random package to randomly generate cross-over points
 import random
 
+# Import the superclass (also called base class), which is an abstract class,
+# to implement the subclass BlendCrossoverOperator
 import GeneticOperator
+
+# Import the Individual package
 import Individual as IND
 
-
+# The subclass that inherits of GeneticOperator
 class BlendCrossoverOperator(GeneticOperator.GeneticOperator):
 
     # Contructor
-    def __init__(self, aProbability, aMutationOperator = None):
+    # aProbability: operator's probability
+    # aMutationOperator: optional mutation operator (to mutate the newly created individual)
+    def __init__(self, aProbability: float, aMutationOperator = None):
+
         # Apply the constructor of the abstract class
         super().__init__(aProbability);
 
@@ -20,6 +28,7 @@ class BlendCrossoverOperator(GeneticOperator.GeneticOperator):
         # Get a SystemRandom instance out of random package
         self.system_random = random.SystemRandom();
 
+    # Perform the operator's actual action
     def apply(self, anEA):
 
         self.use_count += 1;
