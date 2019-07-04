@@ -26,6 +26,7 @@ class RouletteWheel(SelectionOperator):
         self.min_fitness =  float('inf')
         self.max_fitness = -float('inf')
 
+        # Normalise the fitness values between 0 and 1 in case some are negative.
         for individual in anIndividualSet:
             self.min_fitness = min(self.min_fitness, individual.fitness);
             self.max_fitness = max(self.max_fitness, individual.fitness);
