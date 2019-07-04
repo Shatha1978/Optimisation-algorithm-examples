@@ -1,34 +1,52 @@
+# Import the random package to radomly select individuals
 import random
-import numpy
 
+# Import the numpy package to rank individuals
+import numpy as np
+
+# Import the superclass (also called base class), which is an abstract class,
+# to implement the subclass ThresholdSelection
 from SelectionOperator import *
 
+# The subclass that inherits of SelectionOperator
 class TournamentSelection(SelectionOperator):
 
-    def __init__(self, aTournamentSize = 2):
+    # Constructor
+    # aTournamentSize: tournament size (default: 2)
+    def __init__(self, aTournamentSize: int=2):
         super().__init__("Tournament selection");
         self.tournament_size = aTournamentSize;
 
         # Get a SystemRandom instance out of random package
         self.system_random = random.SystemRandom();
 
-    def setTournamentSize(self, aTournamentSize):
+    # Set the tournament size
+    # aTournamentSize: tournament size
+    def setTournamentSize(self, aTournamentSize: int):
         self.tournament_size = aTournamentSize;
 
-    def getTournamentSize(self):
+    # Accessor on the tournament size
+    def getTournamentSize(self) -> int:
         return self.tournament_size;
 
+    # Nothing to do
     def preProcess(self, anIndividualSet):
         return
 
+    # Method used for print()
     def __str__(self):
         return super().__str__() + "\t" + "tournament_size:\t" + str(self.tournament_size);
 
-    def __select__(self, anIndividualSet, aFlag): # aFlag == True for selecting good individuals,
-                                                  # aFlag == False for selecting bad individuals,
+    # Select an idividual
+    # anIndividualSet: The set of individual to choose from
+    # aFlag == True for selecting good individuals,
+    # aFlag == False for selecting bad individuals,
+    def __select__(self, anIndividualSet, aFlag):
 
+        # The max individual ID
         max_ind = len(anIndividualSet) - 1;
 
+        # Store the fitness value of N(=self.tournament_size) individuals
         fitness_set = [];
         while len(fitness_set) < self.tournament_size:
             index = self.system_random.randint(0, max_ind)
