@@ -208,7 +208,7 @@ class EvolutionaryAlgorithm(Optimiser):
             probability_sum += genetic_opterator.getProbability();
 
         # Evolutionary loop
-        for i in range(self.getNumberOfIndividuals()):
+        for _ in range(self.getNumberOfIndividuals()):
 
             # Draw a random number between 0 and 1 minus the probability of elitism
             chosen_operator = self.system_random.uniform(0.0, probability_sum)
