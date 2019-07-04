@@ -2,15 +2,18 @@ import copy
 import random
 import math
 
+# Support for type hints
+from typing import List, Sequence, Callable
+
 class ObjectiveFunction:
     # Get a SystemRandom instance out of random package
     system_random = random.SystemRandom();
 
     def __init__(self,
-                 aNumberOfDimensions,
-                 aBoundarySet,
-                 anObjectiveFunction,
-                 aFlag = 0):
+                 aNumberOfDimensions: int,
+                 aBoundarySet: List[List[float]],
+                 anObjectiveFunction: Callable[[List[float]], float],
+                 aFlag: int=0):
 
         # aFlag is 1 for Minimisation
         # aFlag is 2 for Maximisation
@@ -40,13 +43,13 @@ class ObjectiveFunction:
                 guess.append(self.boundary_set[i][0] + (self.boundary_set[i][1] - self.boundary_set[i][0]) / 2);
             return guess;
 
-    def minimisationFunction(self, aParameterSet):
+    def minimisationFunction(self, aParameterSet: List[float]):
         return self.evaluate(aParameterSet, 1)
 
-    def maximisationFunction(self, aParameterSet):
+    def maximisationFunction(self, aParameterSet: List[float]):
         return self.evaluate(aParameterSet, 2)
 
-    def evaluate(self, aParameterSet, aFlag):
+    def evaluate(self, aParameterSet: List[float], aFlag: int):
         self.number_of_evaluation += 1;
 
         objective_value = self.objective_function(aParameterSet);
@@ -55,7 +58,7 @@ class ObjectiveFunction:
 
         return objective_value;
 
-    def getDistanceToGlobalOptimum(self, aParameterSet) -> float:
+    def getDistanceToGlobalOptimum(self, aParameterSet: List[float]) -> float:
 
         if self.global_optimum == None:
             return float('NaN');
