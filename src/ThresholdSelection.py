@@ -33,7 +33,7 @@ class ThresholdSelection(SelectionOperator):
         return
 
     # Method used for print()
-    def __str__(self):
+    def __str__(self) -> str:
         return super().__str__() + "\t" +
             "threshold:\t" + str(self.threshold) + "\tmax_iteration:\t" + str(self.max_iteration) + "\talternative selection operator:\t" + self.alternative_selection_operator;
 
