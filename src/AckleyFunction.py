@@ -25,7 +25,7 @@ class AckleyFunction(ObjectiveFunction):
 
         # Store the boundaries
         self.boundaries = [];
-        for i in range(aNumberOfDimensions):
+        for _ in range(aNumberOfDimensions):
             self.boundaries.append([-32.768, 32.768]);
 
         # Call the constructor of the superclass
@@ -36,7 +36,7 @@ class AckleyFunction(ObjectiveFunction):
 
         # Store the global optimum
         self.global_optimum = [];
-        for i in range(self.number_of_dimensions):
+        for _ in range(self.number_of_dimensions):
             self.global_optimum.append(0.0);
 
         # Typical values: a = 20, b = 0.2 and c = 2pi.
