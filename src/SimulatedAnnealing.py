@@ -36,13 +36,14 @@ class SimulatedAnnealing(Optimiser):
 
         # Add initial guess if any
         if self.initial_guess != None:
-            self.current_solution = Solution(initial_guess);
-        # Create the current solution from random
+            self.current_solution = Solution(self.objective_function,
+                1, # Minimisation
+                initial_guess);
+        # Use a random guess
         else:
-            parameter_set = [];
-            for i in range(self.objective_function.number_of_dimensions):
-                parameter_set.append(self.system_random.uniform(self.objective_function.boundary_set[i][0], self.objective_function.boundary_set[i][1]));
-            self.current_solution = Solution(parameter_set);
+            self.current_solution = Solution(self.objective_function,
+                1, # Minimisation
+                self.objective_function.initialRandomGuess());
 
         # and copy input parameters
         self.initial_temperature = aTemperature;
@@ -66,7 +67,7 @@ class SimulatedAnnealing(Optimiser):
         self.current_temperature = self.initial_temperature;
 
         # Compute its energy using the cost function
-        self.current_solution.energy = self.computeEnergy(self.current_solution.parameter_set);
+        self.getEnergy(self.current_solution);
 
         # This is also the best solution so far
         self.best_solution = copy.deepcopy(self.current_solution);
@@ -76,9 +77,9 @@ class SimulatedAnnealing(Optimiser):
     # \param self
     # \param aSolution: The solution to assess
     # \return the corresponding energy
-    def computeEnergy(self, aSolution):
+    def getEnergy(self, aSolution):
         # Compute the cost function
-        energy = self.objective_function.evaluate(aSolution, 1);
+        energy = aSolution.getObjective();
 
         # Keep track of the min/max cost values
         self.min_energy = min(self.min_energy, energy);
@@ -113,7 +114,7 @@ class SimulatedAnnealing(Optimiser):
             min_val = self.objective_function.boundary_set[i][0];
             max_val = self.objective_function.boundary_set[i][1];
             range_val = max_val - min_val;
-            new_solution.append(random.gauss(min_val + range_val / 2, range_val * 0.1));
+            new_solution.append(aSolution.getParameter(i) + random.gauss(0.0, range_val * 0.1));
 
         return (copy.deepcopy(new_solution));
 
@@ -138,10 +139,12 @@ class SimulatedAnnealing(Optimiser):
 
             # Create a new solution depending on the current solution,
             # i.e. a neighbour
-            neighbour = Solution(self.getRandomNeighbour(self.current_solution));
+            neighbour = Solution(self.objective_function,
+                1, # Minimisation
+                self.getRandomNeighbour(self.current_solution));
 
             # Get its energy (cost function)
-            neighbour.energy = self.computeEnergy(neighbour.parameter_set);
+            self.getEnergy(neighbour);
 
             # Accept the neighbour or not depending on the acceptance probability
             if self.acceptanceProbability(neighbour.getObjective()) > self.system_random.uniform(0, 1):

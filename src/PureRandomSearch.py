@@ -8,7 +8,6 @@ This package implements the pure random search (PRS) optimisation method.
 # import packages
 ###################################################
 import copy; # For deepcopy
-import random; # For uniform
 
 from Optimiser import *
 from Solution import *
@@ -29,24 +28,21 @@ class PureRandomSearch(Optimiser):
         self.full_name = "Pure Random Search";
         self.short_name = "PRS";
 
-        # Get a SystemRandom instance out of random package
-        self.system_random = random.SystemRandom();
-
         self.number_of_samples = aNumberOfSamples;
 
         # Add initial guess if any
         if self.initial_guess != None:
-            self.best_solution = Solution(initial_guess);
+            self.best_solution = Solution(self.objective_function,
+                self.objective_function.flag,
+                initial_guess);
         # Use a random guess
         else:
-            self.best_solution = Solution(self.objective_function.initialRandomGuess());
+            self.best_solution = Solution(self.objective_function,
+                self.objective_function.flag,
+                self.objective_function.initialRandomGuess());
 
         # Store all the solutions
         self.current_solution_set = [];
-
-        # Compute the cost of the initial guess
-        self.best_solution.energy = self.objective_function.minimisationFunction(self.best_solution.parameter_set);
-
         self.current_solution_set.append(self.best_solution);
 
     def evaluate(self, aParameterSet):
@@ -55,12 +51,18 @@ class PureRandomSearch(Optimiser):
     ## \brief Run one iteration of the PRS algorithm.
     # \param self
     def runIteration(self):
-        new_solution = Solution(self.objective_function.initialRandomGuess());
-        new_solution.energy = self.objective_function.minimisationFunction(new_solution.parameter_set);
+        new_solution = Solution(self.objective_function,
+            self.objective_function.flag,
+            self.objective_function.initialRandomGuess());
+
         self.current_solution_set.append(new_solution);
 
-        if self.best_solution.energy > new_solution.energy:
-            self.best_solution = copy.deepcopy(new_solution);
+        if self.objective_function.flag == 1: # Minimisation
+            if self.best_solution.objective > new_solution.objective:
+                self.best_solution = copy.deepcopy(new_solution);
+        elif self.objective_function.flag == 2: # Maximisation
+            if self.best_solution.objective < new_solution.objective:
+                self.best_solution = copy.deepcopy(new_solution);
 
     ## \brief Run the optimisation.
     # \param self
