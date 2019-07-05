@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from scipy import optimize
 
 import pandas as pd
 
@@ -14,6 +13,7 @@ font = {'family' : 'normal',
 
 matplotlib.rc('font', **font)
 
+from ScipyMinimize import *
 from PureRandomSearch import *
 from PSO import *
 from SimulatedAnnealing import *
@@ -86,32 +86,11 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         for method in methods:
             g_test_problem.number_of_evaluation = 0;
 
-            # Methods that cannot handle constraints or bounds.
-            if method == 'Nelder-Mead' or method == 'Powell' or method == 'CG' or method == 'BFGS' or method == 'COBYLA':
+            optimiser = ScipyMinimize(g_test_problem, method);
+            optimiser.setMaxIterations(max_iterations);
+            optimiser.run();
 
-                result = optimize.minimize(g_test_problem.minimisationFunction,
-                    initial_guess,
-                    method=method,
-                    options={'maxiter': max_iterations});
-
-            elif method == 'L-BFGS-B' or method == 'TNC' or method == 'SLSQP':
-                result = optimize.minimize(g_test_problem.minimisationFunction,
-                    initial_guess,
-                    method=method,
-                    bounds=g_test_problem.boundaries,
-                    options={'maxiter': max_iterations});
-
-            else:
-                result = optimize.minimize(g_test_problem.minimisationFunction,
-                    initial_guess,
-                    method=method,
-                    bounds=g_test_problem.boundaries,
-                    jac='2-point',
-                    options={'maxiter': max_iterations});
-
-            data = [[run_id, method, result.x[0], result.x[1], g_test_problem.getEuclideanDistanceToGlobalOptimum(result.x), float(g_test_problem.number_of_evaluation)]];
-
-            df = df.append(pd.DataFrame(data, columns = columns));
+            df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
 
         # Parameters for EA
