@@ -116,7 +116,14 @@ class SimulatedAnnealing(Optimiser):
             range_val = max_val - min_val;
             new_solution.append(aSolution.getParameter(i) + random.gauss(0.0, range_val * 0.1));
 
-        return (copy.deepcopy(new_solution));
+            # Check boundary conditions
+            new_solution[i] = max(aSolution.objective_function.boundary_set[i][0], new_solution[i]);
+
+            new_solution[i] = min(aSolution.objective_function.boundary_set[i][1], new_solution[i]);
+
+
+
+        return (new_solution);
 
     ## \brief Get a neighbour in the vicinity of a given solution.
     # \param self
