@@ -38,7 +38,7 @@ def visualisationCallback():
 
 
 # Create an EA
-optimiser = EvolutionaryAlgorithm(AckleyFunction(), g_number_of_individuals)
+optimiser = EvolutionaryAlgorithm(AckleyFunction(2), g_number_of_individuals)
 
 # Set the selection operator
 #optimiser.setSelectionOperator(TournamentSelection(2));
