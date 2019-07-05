@@ -14,6 +14,6 @@ class Individual(Solution.Solution):
     # Get a SystemRandom instance out of random package
     system_random = random.SystemRandom();
 
-    def __init__(self, anObjectiveFunction, aParameterSet = None):
+    def __init__(self, anObjectiveFunction, aParameterSet = None, aComputeFitnessFlag = False):
 
-        super().__init__(anObjectiveFunction, 2, aParameterSet); # 2 for maximisation
+        super().__init__(anObjectiveFunction, 2, aParameterSet, aComputeFitnessFlag); # 2 for maximisation

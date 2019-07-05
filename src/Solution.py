@@ -4,7 +4,7 @@ class Solution:
 
     # aFlag: 1 for minimisation, 2 for maximisation (default value: 0)
 
-    def __init__(self, anObjectiveFunction, aFlag = 0, aParameterSet = None):
+    def __init__(self, anObjectiveFunction, aFlag = 0, aParameterSet = None, aComputeObjectiveFlag = True):
 
         # Store the class attributes
         self.objective_function = anObjectiveFunction;
@@ -20,7 +20,7 @@ class Solution:
             self.objective = 0;
 
         # Copy the parameters if any
-        if type(aParameterSet) != type(None):
+        if type(aParameterSet) != type(None) and aComputeObjectiveFlag:
             self.parameter_set = copy.deepcopy(aParameterSet);
             self.computeObjectiveFunction();
 
