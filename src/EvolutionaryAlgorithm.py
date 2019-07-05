@@ -1,5 +1,5 @@
 
-import copy
+#import copy
 import random
 import Individual as IND
 import numpy as np
@@ -115,7 +115,7 @@ class EvolutionaryAlgorithm(Optimiser):
             if (self.current_solution_set[best_individual_index].getObjective() < self.current_solution_set[i].getObjective()):
                 best_individual_index = i;
 
-        self.best_solution = copy.deepcopy(self.current_solution_set[best_individual_index]);
+        self.best_solution = self.current_solution_set[best_individual_index].copy();
 
     def runIteration(self):
         if self.selection_operator == None:
@@ -156,7 +156,7 @@ class EvolutionaryAlgorithm(Optimiser):
         # Copy the best parents into the population of children
         for i in range(number_of_individuals_by_elitism):
             individual = self.current_solution_set[index_sorted[i]]
-            offspring_population.append(copy.deepcopy(individual));
+            offspring_population.append(individual.copy());
             if self.elitism_operator != None:
                 self.elitism_operator.use_count += 1;
 
