@@ -1,5 +1,5 @@
 
-#import copy
+import copy
 import random
 import Individual as IND
 import numpy as np
@@ -72,7 +72,7 @@ class EvolutionaryAlgorithm(Optimiser):
 
             set_of_individuals = [];
             for ind in self.current_solution_set:
-                for gene in ind.genes:
+                for gene in ind.parameter_set:
                     set_of_individuals.append(gene);
 
             temp = self.global_fitness_function.evaluate(set_of_individuals, self.global_fitness_function.flag);
