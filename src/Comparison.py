@@ -49,6 +49,15 @@ def cooling():
 
     return initial_temperature * math.pow(cooling_rate, g_test_problem.number_of_evaluation);
 
+def appendResultToDataFrame(aRunID, anOptimiser, aDataFrame, aColumnSet, aFilePrefix):
+    global g_test_problem;
+
+    data = [[aRunID, anOptimiser.short_name, anOptimiser.best_solution.parameter_set[0], anOptimiser.best_solution.parameter_set[1], g_test_problem.getEuclideanDistanceToGlobalOptimum(anOptimiser.best_solution.parameter_set), float(g_test_problem.number_of_evaluation)]];
+    aDataFrame = aDataFrame.append(pd.DataFrame(data, columns = aColumnSet));
+
+    aDataFrame.to_csv (aFilePrefix + 'summary.csv', index = None, header=True)
+
+    return aDataFrame;
 
 def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str, visualisation = False):
     global g_test_problem;
@@ -61,7 +70,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
     for run_id in range(number_of_runs):
 
         # Create a random guess common to all the optimisation methods
-        initial_guess = test_problem.initialRandomGuess();
+        initial_guess = g_test_problem.initialRandomGuess();
 
         # Optimisation methods implemented in scipy.optimize
         methods = ['Nelder-Mead',
@@ -75,32 +84,32 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         ];
 
         for method in methods:
-            test_problem.number_of_evaluation = 0;
+            g_test_problem.number_of_evaluation = 0;
 
             # Methods that cannot handle constraints or bounds.
             if method == 'Nelder-Mead' or method == 'Powell' or method == 'CG' or method == 'BFGS' or method == 'COBYLA':
 
-                result = optimize.minimize(test_problem.minimisationFunction,
+                result = optimize.minimize(g_test_problem.minimisationFunction,
                     initial_guess,
                     method=method,
                     options={'maxiter': max_iterations});
 
             elif method == 'L-BFGS-B' or method == 'TNC' or method == 'SLSQP':
-                result = optimize.minimize(test_problem.minimisationFunction,
+                result = optimize.minimize(g_test_problem.minimisationFunction,
                     initial_guess,
                     method=method,
-                    bounds=test_problem.boundaries,
+                    bounds=g_test_problem.boundaries,
                     options={'maxiter': max_iterations});
 
             else:
-                result = optimize.minimize(test_problem.minimisationFunction,
+                result = optimize.minimize(g_test_problem.minimisationFunction,
                     initial_guess,
                     method=method,
-                    bounds=test_problem.boundaries,
+                    bounds=g_test_problem.boundaries,
                     jac='2-point',
                     options={'maxiter': max_iterations});
 
-            data = [[run_id, method, result.x[0], result.x[1], test_problem.getEuclideanDistanceToGlobalOptimum(result.x), float(test_problem.number_of_evaluation)]];
+            data = [[run_id, method, result.x[0], result.x[1], g_test_problem.getEuclideanDistanceToGlobalOptimum(result.x), float(g_test_problem.number_of_evaluation)]];
 
             df = df.append(pd.DataFrame(data, columns = columns));
 
@@ -121,21 +130,21 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
 
         # Optimisation and visualisation
-        optimiser = PureRandomSearch(test_problem, max_iterations);
+        optimiser = PureRandomSearch(g_test_problem, max_iterations);
 
-        test_problem.number_of_evaluation = 0;
+        g_test_problem.number_of_evaluation = 0;
 
         if run_id == 0 and visualisation:
             optimiser.plotAnimation(max_iterations);
         else:
-            for i in range(max_iterations):
+            for _ in range(max_iterations):
                 optimiser.runIteration();
 
-        data = [[run_id, optimiser.short_name, optimiser.best_solution.parameter_set[0], optimiser.best_solution.parameter_set[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.parameter_set), float(test_problem.number_of_evaluation)]];
-        df = df.append(pd.DataFrame(data, columns = columns));
+        appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
+
 
         # Optimisation and visualisation
-        optimiser = EvolutionaryAlgorithm(test_problem, g_number_of_individuals)
+        '''optimiser = EvolutionaryAlgorithm(g_test_problem, g_number_of_individuals)
 
         # Set the selection operator
         #optimiser.setSelectionOperator(TournamentSelection(2));
@@ -154,58 +163,54 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         optimiser.addGeneticOperator(blend_cross_over);
         optimiser.addGeneticOperator(elitism);
 
-        test_problem.number_of_evaluation = 0;
+        g_test_problem.number_of_evaluation = 0;
 
         if run_id == 0 and visualisation:
             optimiser.plotAnimation(g_iterations, visualisationCallback);
         else:
-            for i in range(g_iterations):
+            for _ in range(g_iterations):
                 optimiser.runIteration();
                 visualisationCallback();
 
-        data = [[run_id, optimiser.short_name, optimiser.best_solution.genes[0], optimiser.best_solution.genes[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.genes), float(test_problem.number_of_evaluation)]];
-        df = df.append(pd.DataFrame(data, columns = columns));
+        appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);'''
+
 
         # Optimisation and visualisation
-        test_problem.number_of_evaluation = 0;
-        optimiser = PSO(test_problem, g_number_of_individuals);
+        '''g_test_problem.number_of_evaluation = 0;
+        optimiser = PSO(g_test_problem, g_number_of_individuals);
 
         if run_id == 0 and visualisation:
             optimiser.plotAnimation(g_iterations);
         else:
-            for i in range(g_iterations - 1):
+            for _ in range(g_iterations - 1):
                 optimiser.runIteration();
 
-        data = [[run_id, optimiser.short_name, optimiser.best_solution.position[0], optimiser.best_solution.position[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.position), float(test_problem.number_of_evaluation)]];
-        df = df.append(pd.DataFrame(data, columns = columns));
+        appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);'''
 
 
         # Optimisation and visualisation
-        test_problem.number_of_evaluation = 0;
+        g_test_problem.number_of_evaluation = 0;
 
-        optimiser = SimulatedAnnealing(test_problem, 5000, 0.04);
+        optimiser = SimulatedAnnealing(g_test_problem, 5000, 0.04);
         optimiser.cooling_schedule = cooling;
 
         if run_id == 0 and visualisation:
             optimiser.plotAnimation(max_iterations);
         else:
-            for t in range(max_iterations):
+            for _ in range(max_iterations):
                 optimiser.runIteration();
             #print(optimiser.current_temperature)
 
-        data = [[run_id, optimiser.short_name, optimiser.best_solution.parameter_set[0], optimiser.best_solution.parameter_set[1], test_problem.getEuclideanDistanceToGlobalOptimum(optimiser.best_solution.parameter_set), float(test_problem.number_of_evaluation)]];
-        df = df.append(pd.DataFrame(data, columns = columns));
-
-        df.to_csv (file_prefix + 'summary.csv', index = None, header=True)
+        appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
 
     title_prefix = "";
 
-    if test_problem.name != "":
-        if test_problem.flag == 1:
-            title_prefix = "Minimisation of " + test_problem.name + "\n";
+    if g_test_problem.name != "":
+        if g_test_problem.flag == 1:
+            title_prefix = "Minimisation of " + g_test_problem.name + "\n";
         else:
-            title_prefix = "Maximisation of " + test_problem.name + "\n";
+            title_prefix = "Maximisation of " + g_test_problem.name + "\n";
 
     boxplot(df, 'Evaluations', title_prefix + 'Number of evaluations',      file_prefix + 'evaluations.pdf', False)
 
