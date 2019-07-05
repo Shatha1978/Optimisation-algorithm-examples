@@ -52,8 +52,16 @@ def cooling():
 def appendResultToDataFrame(aRunID, anOptimiser, aDataFrame, aColumnSet, aFilePrefix):
     global g_test_problem;
 
-    data = [[aRunID, anOptimiser.short_name, anOptimiser.best_solution.parameter_set[0], anOptimiser.best_solution.parameter_set[1], g_test_problem.getEuclideanDistanceToGlobalOptimum(anOptimiser.best_solution.parameter_set), float(g_test_problem.number_of_evaluation)]];
-    aDataFrame = aDataFrame.append(pd.DataFrame(data, columns = aColumnSet));
+    data = [aRunID, anOptimiser.short_name];
+
+    for i in range(anOptimiser.best_solution.objective_function.number_of_dimensions):
+        data.append(anOptimiser.best_solution.parameter_set[i]);
+
+    data.append(anOptimiser.best_solution.getObjective());
+    data.append(g_test_problem.getEuclideanDistanceToGlobalOptimum(anOptimiser.best_solution.parameter_set));
+    data.append(float(g_test_problem.number_of_evaluation));
+
+    aDataFrame = aDataFrame.append(pd.DataFrame([data], columns = aColumnSet));
 
     aDataFrame.to_csv (aFilePrefix + 'summary.csv', index = None, header=True)
 
@@ -64,7 +72,14 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
     g_test_problem = test_problem;
 
     # Store the results for each optimisation method
-    columns = ['Run', 'Methods','x','y','Euclidean distance', 'Evaluations'];
+    columns = ['Run', 'Methods'];
+    for i in range(test_problem.number_of_dimensions):
+        columns.append("X_" + str(i));
+
+    columns.append("Objective value");
+    columns.append("Euclidean distance");
+    columns.append("Evaluations");
+
     df = pd.DataFrame (columns = columns);
 
     for run_id in range(number_of_runs):
