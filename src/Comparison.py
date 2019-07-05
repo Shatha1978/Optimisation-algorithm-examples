@@ -93,6 +93,22 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
             df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         # Parameters for EA
         g_iterations = int(max_iterations / g_number_of_individuals);
 
@@ -106,6 +122,56 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
             # Make sure the mutation variance is up-to-date
             gaussian_mutation.setMutationVariance(g_current_sigma);
+
+
+
+
+        # Optimisation and visualisation
+        g_test_problem.number_of_evaluation = 0;
+        optimiser = EvolutionaryAlgorithm(g_test_problem, g_number_of_individuals)
+
+        # Set the selection operator
+        #optimiser.setSelectionOperator(TournamentSelection(3));
+        #optimiser.setSelectionOperator(RouletteWheel());
+        optimiser.setSelectionOperator(RankSelection());
+
+        # Create the genetic operators
+        elitism = ElitismOperator(0.1);
+        new_blood = NewBloodOperator(0.1);
+        gaussian_mutation = GaussianMutationOperator(0.1, 0.2);
+        blend_cross_over = BlendCrossoverOperator(0.6, gaussian_mutation);
+
+        # Add the genetic operators to the EA
+        optimiser.addGeneticOperator(new_blood);
+        optimiser.addGeneticOperator(gaussian_mutation);
+        optimiser.addGeneticOperator(blend_cross_over);
+        optimiser.addGeneticOperator(elitism);
+
+
+        if run_id == 0 and visualisation:
+            optimiser.plotAnimation(g_iterations, visualisationCallback);
+        else:
+            for _ in range(1, g_iterations):
+                optimiser.runIteration();
+                visualisationCallback();
+
+        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
+
+
+
+
+        # Optimisation and visualisation
+        '''g_test_problem.number_of_evaluation = 0;
+        optimiser = PSO(g_test_problem, g_number_of_individuals);
+
+        if run_id == 0 and visualisation:
+            optimiser.plotAnimation(g_iterations);
+        else:
+            for _ in range(g_iterations - 1):
+                optimiser.runIteration();
+
+        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);'''
+
 
 
         # Optimisation and visualisation
@@ -122,49 +188,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
 
-        # Optimisation and visualisation
-        optimiser = EvolutionaryAlgorithm(g_test_problem, g_number_of_individuals)
 
-        # Set the selection operator
-        #optimiser.setSelectionOperator(TournamentSelection(2));
-        optimiser.setSelectionOperator(RouletteWheel());
-        #optimiser.setSelectionOperator(RankSelection());
-
-        # Create the genetic operators
-        elitism = ElitismOperator(0.1);
-        new_blood = NewBloodOperator(0.1);
-        gaussian_mutation = GaussianMutationOperator(0.1, 0.2);
-        blend_cross_over = BlendCrossoverOperator(0.6, gaussian_mutation);
-
-        # Add the genetic operators to the EA
-        optimiser.addGeneticOperator(new_blood);
-        optimiser.addGeneticOperator(gaussian_mutation);
-        optimiser.addGeneticOperator(blend_cross_over);
-        optimiser.addGeneticOperator(elitism);
-
-        g_test_problem.number_of_evaluation = 0;
-
-        if run_id == 0 and visualisation:
-            optimiser.plotAnimation(g_iterations, visualisationCallback);
-        else:
-            for _ in range(g_iterations):
-                optimiser.runIteration();
-                visualisationCallback();
-
-        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
-
-
-        # Optimisation and visualisation
-        '''g_test_problem.number_of_evaluation = 0;
-        optimiser = PSO(g_test_problem, g_number_of_individuals);
-
-        if run_id == 0 and visualisation:
-            optimiser.plotAnimation(g_iterations);
-        else:
-            for _ in range(g_iterations - 1):
-                optimiser.runIteration();
-
-        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);'''
 
 
         # Optimisation and visualisation
@@ -176,7 +200,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         if run_id == 0 and visualisation:
             optimiser.plotAnimation(max_iterations);
         else:
-            for _ in range(max_iterations):
+            for _ in range(1, max_iterations):
                 optimiser.runIteration();
             #print(optimiser.current_temperature)
 
