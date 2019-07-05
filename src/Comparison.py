@@ -140,7 +140,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
             for _ in range(max_iterations):
                 optimiser.runIteration();
 
-        appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
+        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
 
         # Optimisation and visualisation
@@ -172,7 +172,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
                 optimiser.runIteration();
                 visualisationCallback();
 
-        appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);'''
+        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);'''
 
 
         # Optimisation and visualisation
@@ -185,7 +185,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
             for _ in range(g_iterations - 1):
                 optimiser.runIteration();
 
-        appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);'''
+        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);'''
 
 
         # Optimisation and visualisation
@@ -201,7 +201,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
                 optimiser.runIteration();
             #print(optimiser.current_temperature)
 
-        appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
+        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
 
     title_prefix = "";
