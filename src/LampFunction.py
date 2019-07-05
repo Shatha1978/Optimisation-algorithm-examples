@@ -32,16 +32,22 @@ class LampGlobalFitnessFunction(ObjectiveFunction):
         super().__init__(3 * aNumberOfLamps,
                          self.boundaries,
                          self.objectiveFunction,
-                         1);
+                         2);
 
         # The name of the function
         self.name = "Lamp Problem";
         self.reference_image = np.ones((self.room_length, self.room_width));
-
+        self.metrics_function = getSSIM;
 
     # objectiveFunction implements the Ackley function
-    def objectiveFunction(self, aSolution):
-        return getRMSE(self.reference_image, self.createImage(aSolution));
+    def objectiveFunction(self, aSolution, aLogFlag = True):
+
+        metrics = self.metrics_function(self.reference_image, self.createImage(aSolution));
+
+        if aLogFlag:
+            self.global_fitness = metrics;
+
+        return metrics;
 
     def createImage(self, aSolution):
         # Create a black image
@@ -60,6 +66,47 @@ class LampGlobalFitnessFunction(ObjectiveFunction):
     def saveImage(self, aSolution, aFileName):
         test_image = self.createImage(aSolution.parameter_set);
         np.savetxt(aFileName, test_image);
+
+
+
+
+
+
+
+class LampLocalFitnessFunction(ObjectiveFunction):
+    def __init__(self, aGlobalFitnessFunction):
+
+        number_of_dimensions = 3;
+
+        self.boundaries = [];
+        for i in range(number_of_dimensions - 1):
+            self.boundaries.append(aGlobalFitnessFunction.boundaries[i]);
+        self.boundaries.append([1, 1]);
+
+        super().__init__(number_of_dimensions,
+                         self.boundaries,
+                         self.objectiveFunction,
+                         2); # Maximisation
+
+        self.global_fitness_function = aGlobalFitnessFunction;
+
+    def objectiveFunction(self, aSolution):
+        # Global fitness with individual
+        global_fitness_with_individual = self.global_fitness_function.global_fitness;
+
+        global_fitness_without_individual = self.global_fitness_function.objectiveFunction(aSolution, False);
+
+        # Leave-out-cross-validation (marginal fitness)
+        if self.global_fitness_function.flag == 1:
+            marginal_fitness = global_fitness_without_individual - global_fitness_with_individual;
+        else:
+            marginal_fitness = global_fitness_with_individual - global_fitness_without_individual;
+
+        return (marginal_fitness);
+
+
+
+
 
 def create_circular_mask(w, h, x, y, radius):
 
