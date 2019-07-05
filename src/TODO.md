@@ -1,23 +1,19 @@
 # TODO list
 
-
 ## Files that have been checked (comments added)
 
 1.  AckleyFunction.py
 2.  ObjectiveFunction.py
-
-1.  SelectionOperator.py
+3.  SelectionOperator.py
     1.  ThresholdSelection.py
-    1.  TournamentSelection.py
-    1.  RouletteWheel.py
-    1.  RankSelection.py
-
-1.  GeneticOperator.py
-1.  BlendCrossoverOperator.py
-1.  ElitismOperator.py
-1.  GaussianMutationOperator.py
-1.  NewBloodOperator.py
-
+    2.  TournamentSelection.py
+    3.  RouletteWheel.py
+    4.  RankSelection.py
+4.  GeneticOperator.py
+5.  BlendCrossoverOperator.py
+6.  ElitismOperator.py
+7.  GaussianMutationOperator.py
+8.  NewBloodOperator.py
 
 ## Files that have been not checked
 
@@ -25,10 +21,8 @@
 1.  SimulatedAnnealing.py
 1.  EvolutionaryAlgorithm.py
 1.  PSO.py
-
 1.  Individual.py
 1.  Particle.py
-
 1.  test_PSO.py
 1.  TestAckley.py
 1.  test_PSO_without_vis.py
