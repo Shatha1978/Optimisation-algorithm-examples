@@ -50,7 +50,7 @@ class TournamentSelection(SelectionOperator):
         fitness_set = [];
         while len(fitness_set) < self.tournament_size:
             index = self.system_random.randint(0, max_ind)
-            fitness = anIndividualSet[index].fitness
+            fitness = anIndividualSet[index].getObjective()
             fitness_set.append(fitness)
 
         # Find the best individual depending on the fitness
