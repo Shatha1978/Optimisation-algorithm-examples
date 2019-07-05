@@ -36,16 +36,13 @@ class EvolutionaryAlgorithm(Optimiser):
         if aUpdateIndividualContribution:
             self.individual_callback = aUpdateIndividualContribution;
 
-        # Keep track of the best individual
-        self.current_solution_set.append(IND.Individual(self.objective_function.number_of_dimensions, self.objective_function.boundary_set, aFitnessFunction));
-
         # Add initial guess if any
-        if self.initial_guess != None:
-            self.current_solution_set.append(IND.Individual(self.objective_function.number_of_dimensions, self.objective_function.boundary_set, aFitnessFunction, self.initial_guess));
+        if type(self.initial_guess) != type(None):
+            self.current_solution_set.append(IND.Individual(self.objective_function, self.initial_guess));
 
         # Create the population
         while (self.getNumberOfIndividuals() < aNumberOfIndividuals):
-            self.current_solution_set.append(IND.Individual(self.objective_function.number_of_dimensions, self.objective_function.boundary_set, aFitnessFunction))
+            self.current_solution_set.append(IND.Individual(self.objective_function, self.objective_function.initialRandomGuess()))
 
         # Compute the global fitness
         self.global_fitness = None;
@@ -115,10 +112,10 @@ class EvolutionaryAlgorithm(Optimiser):
         best_individual_index = 0;
         for i in range(self.getNumberOfIndividuals()):
             self.current_solution_set[i].computeObjectiveFunction();
-            if (self.current_solution_set[best_individual_index].fitness < self.current_solution_set[i].fitness):
+            if (self.current_solution_set[best_individual_index].getObjective() < self.current_solution_set[i].getObjective()):
                 best_individual_index = i;
 
-        self.best_solution = self.current_solution_set[best_individual_index].copy();
+        self.best_solution = copy.deepcopy(self.current_solution_set[best_individual_index]);
 
     def runIteration(self):
         if self.selection_operator == None:
@@ -135,8 +132,8 @@ class EvolutionaryAlgorithm(Optimiser):
         # (we use the negative of the fitness so that np.argsort returns
         # the array of indices in the right order)
         for i in range(self.getNumberOfIndividuals()):
-            negative_fitness_parents.append(-self.current_solution_set[i].fitness)
-            #print("fitness  ",self.current_solution_set[i].fitness)
+            negative_fitness_parents.append(-self.current_solution_set[i].getObjective())
+            #print("fitness  ",self.current_solution_set[i].getObjective())
 
         # Sort the array of negative fitnesses
         index_sorted = np.argsort((negative_fitness_parents))
@@ -159,7 +156,7 @@ class EvolutionaryAlgorithm(Optimiser):
         # Copy the best parents into the population of children
         for i in range(number_of_individuals_by_elitism):
             individual = self.current_solution_set[index_sorted[i]]
-            offspring_population.append(individual.copy())
+            offspring_population.append(copy.deepcopy(individual));
             if self.elitism_operator != None:
                 self.elitism_operator.use_count += 1;
 

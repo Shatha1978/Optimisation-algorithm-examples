@@ -123,7 +123,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
 
         # Optimisation and visualisation
-        '''optimiser = EvolutionaryAlgorithm(g_test_problem, g_number_of_individuals)
+        optimiser = EvolutionaryAlgorithm(g_test_problem, g_number_of_individuals)
 
         # Set the selection operator
         #optimiser.setSelectionOperator(TournamentSelection(2));
@@ -151,7 +151,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
                 optimiser.runIteration();
                 visualisationCallback();
 
-        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);'''
+        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
 
         # Optimisation and visualisation

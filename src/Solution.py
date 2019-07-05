@@ -20,7 +20,7 @@ class Solution:
             self.objective = 0;
 
         # Copy the parameters if any
-        if aParameterSet != None:
+        if type(aParameterSet) != type(None):
             self.parameter_set = copy.deepcopy(aParameterSet);
             self.computeObjectiveFunction();
 

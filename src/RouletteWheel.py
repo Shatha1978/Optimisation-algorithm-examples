@@ -28,13 +28,13 @@ class RouletteWheel(SelectionOperator):
 
         # Normalise the fitness values between 0 and 1 in case some are negative.
         for individual in anIndividualSet:
-            self.min_fitness = min(self.min_fitness, individual.fitness);
-            self.max_fitness = max(self.max_fitness, individual.fitness);
+            self.min_fitness = min(self.min_fitness, individual.getObjective());
+            self.max_fitness = max(self.max_fitness, individual.getObjective());
 
         range = self.max_fitness - self.min_fitness;
 
         for individual in anIndividualSet:
-            self.sum_fitness += (individual.fitness - self.min_fitness) / range;
+            self.sum_fitness += (individual.getObjective() - self.min_fitness) / range;
 
     # Select an idividual
     # anIndividualSet: The set of individual to choose from
@@ -52,6 +52,6 @@ class RouletteWheel(SelectionOperator):
         accumulator = 0.0;
         range = self.max_fitness - self.min_fitness;
         for individual in anIndividualSet:
-            accumulator += (individual.fitness - self.min_fitness) / range;
+            accumulator += (individual.getObjective() - self.min_fitness) / range;
             if accumulator >= random_number:
                 return anIndividualSet.index(individual)

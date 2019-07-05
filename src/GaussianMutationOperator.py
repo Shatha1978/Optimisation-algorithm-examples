@@ -1,6 +1,9 @@
 # Import the random package to randomly alter genes
 import random
 
+# Import the copy package for deepcopies
+import copy
+
 # Import the superclass (also called base class), which is an abstract class,
 # to implement the subclass GaussianMutationOperator
 import GeneticOperator
@@ -43,7 +46,7 @@ class GaussianMutationOperator(GeneticOperator.GeneticOperator):
         parent_index = anEA.selection_operator.select(anEA.current_solution_set)
 
         # Copy the parent into a child
-        child = anEA.current_solution_set[parent_index].copy();
+        child = copy.deepcopy(anEA.current_solution_set[parent_index]);
 
         # Mutate the child and return it
         return self.mutate(child);
@@ -51,9 +54,9 @@ class GaussianMutationOperator(GeneticOperator.GeneticOperator):
     # Mutate the genes of a given individual and return it
     def mutate(self, anIndividual):
 
-        for i in range(len(anIndividual.genes)):
-            anIndividual.genes[i] = self.system_random.gauss(anIndividual.genes[i], self.mutation_variance);
-            anIndividual.genes[i] = max(anIndividual.boundary_set[i][0], anIndividual.genes[i]);
-            anIndividual.genes[i] = min(anIndividual.boundary_set[i][1], anIndividual.genes[i]);
+        for i in range(len(anIndividual.parameter_set)):
+            anIndividual.parameter_set[i] = self.system_random.gauss(anIndividual.parameter_set[i], self.mutation_variance);
+            anIndividual.parameter_set[i] = max(anIndividual.objective_function.boundary_set[i][0], anIndividual.parameter_set[i]);
+            anIndividual.parameter_set[i] = min(anIndividual.objective_function.boundary_set[i][1], anIndividual.parameter_set[i]);
 
         return anIndividual;

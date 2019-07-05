@@ -28,7 +28,7 @@ class RankSelection(SelectionOperator):
         # Sort index of individuals based on their fitness
         fitness_set = [];
         for individual in anIndividualSet:
-            fitness_set.append(individual.fitness)
+            fitness_set.append(individual.getObjective())
 
         # Sort the array
         self.rank_set = np.argsort((fitness_set))
