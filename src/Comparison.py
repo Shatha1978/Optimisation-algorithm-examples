@@ -67,7 +67,7 @@ def appendResultToDataFrame(aRunID, anOptimiser, aDataFrame, aColumnSet, aFilePr
 
     return aDataFrame;
 
-def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str, visualisation = False):
+def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str, visualisation = False, aCallback = None):
     global g_test_problem;
     g_test_problem = test_problem;
 
@@ -83,6 +83,8 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
     df = pd.DataFrame (columns = columns);
 
     for run_id in range(number_of_runs):
+
+        print("Run #", run_id);
 
         # Create a random guess common to all the optimisation methods
         initial_guess = g_test_problem.initialRandomGuess();
@@ -102,26 +104,14 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
             g_test_problem.number_of_evaluation = 0;
 
             optimiser = ScipyMinimize(g_test_problem, method);
+            print("\tOptimiser:", optimiser.full_name);
             optimiser.setMaxIterations(max_iterations);
             optimiser.run();
 
             df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            if type(aCallback) != type(None):
+                aCallback(optimiser, file_prefix, run_id);
 
 
         # Parameters for EA
@@ -144,6 +134,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         # Optimisation and visualisation
         g_test_problem.number_of_evaluation = 0;
         optimiser = EvolutionaryAlgorithm(g_test_problem, g_number_of_individuals)
+        print("\tOptimiser:", optimiser.full_name);
 
         # Set the selection operator
         #optimiser.setSelectionOperator(TournamentSelection(3));
@@ -172,12 +163,16 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
+        if type(aCallback) != type(None):
+            aCallback(optimiser, file_prefix, run_id);
+
 
 
 
         # Optimisation and visualisation
         '''g_test_problem.number_of_evaluation = 0;
         optimiser = PSO(g_test_problem, g_number_of_individuals);
+        print("\tOptimiser:", optimiser.full_name);
 
         if run_id == 0 and visualisation:
             optimiser.plotAnimation(g_iterations);
@@ -185,12 +180,20 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
             for _ in range(g_iterations - 1):
                 optimiser.runIteration();
 
-        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);'''
+        df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
+
+        if type(aCallback) != type(None):
+            aCallback(optimiser, file_prefix, run_id);
+
+
+
+        '''
 
 
 
         # Optimisation and visualisation
         optimiser = PureRandomSearch(g_test_problem, max_iterations);
+        print("\tOptimiser:", optimiser.full_name);
 
         g_test_problem.number_of_evaluation = 0;
 
@@ -202,6 +205,10 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
+        if type(aCallback) != type(None):
+            aCallback(optimiser, file_prefix, run_id);
+
+
 
 
 
@@ -210,6 +217,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         g_test_problem.number_of_evaluation = 0;
 
         optimiser = SimulatedAnnealing(g_test_problem, 5000, 0.04);
+        print("\tOptimiser:", optimiser.full_name);
         optimiser.cooling_schedule = cooling;
 
         if run_id == 0 and visualisation:
@@ -220,6 +228,11 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
             #print(optimiser.current_temperature)
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
+
+        if type(aCallback) != type(None):
+            aCallback(optimiser, file_prefix, run_id);
+
+
 
 
     title_prefix = "";
