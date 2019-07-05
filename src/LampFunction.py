@@ -9,7 +9,7 @@ from ImageMetrics import *
 
 
 # The subclass that inherits of ObjectiveFunction
-class LampFunction(ObjectiveFunction):
+class LampGlobalFitnessFunction(ObjectiveFunction):
 
     # Constructor
     # aNumberOfDimensions: the number of dimensions (e.g. how many parameters)
@@ -26,9 +26,10 @@ class LampFunction(ObjectiveFunction):
         for _ in range(self.number_of_lamps):
             self.boundaries.append([0, self.room_width  - 1]);
             self.boundaries.append([0, self.room_length - 1]);
+            self.boundaries.append([0, 1]);
 
         # Call the constructor of the superclass
-        super().__init__(2 * aNumberOfLamps,
+        super().__init__(3 * aNumberOfLamps,
                          self.boundaries,
                          self.objectiveFunction,
                          1);
@@ -46,9 +47,12 @@ class LampFunction(ObjectiveFunction):
         # Create a black image
         test_image = np.zeros((self.room_length, self.room_width));
 
-        # Add the lamps
-        for i in range(round(len(aSolution) / 2)):
-            test_image = np.add(test_image, create_circular_mask(self.room_width, self.room_length, aSolution[i * 2], aSolution[i * 2 + 1], self.lamp_radius));
+        # Process every lamp
+        for i in range(round(len(aSolution) / 3)):
+            # The lamp is on
+            if aSolution[i * 3 + 2] > 0.5:
+                # Add the lamp
+                test_image = np.add(test_image, create_circular_mask(self.room_width, self.room_length, aSolution[i * 3], aSolution[i * 3 + 1], self.lamp_radius));
 
         # Return the new image
         return test_image;
