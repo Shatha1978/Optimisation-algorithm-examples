@@ -5,7 +5,6 @@ import numpy as np
 
 import skimage.measure as measure;
 import skimage.exposure as exposure;
-from skimage import io, color, img_as_ubyte
 
 def getEntropy(anImage):
     grayImg = (linearNormalisation(anImage, 0, 255)).astype(np.uint8);
@@ -34,8 +33,6 @@ def getMAE(aReferenceVector, aTestVector):
 
 def getRelativeError(aReferenceVector, aTestVector):
     return np.abs(np.divide(np.subtract(aReferenceVector, aTestVector), aReferenceVector)).mean();
-
-    measure.compare_ssim( aReferenceVector, aTestVector);
 
 def getSSIM(aReferenceVector, aTestVector):
     return measure.compare_ssim( aReferenceVector, aTestVector);
