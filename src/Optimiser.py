@@ -69,7 +69,7 @@ class Optimiser:
         surf = ax.plot_surface(np.array(X), np.array(Y), np.array(Z), cmap=cm.jet, alpha=0.2)
 
         # Add a color bar which maps values to colors.
-        #fig.colorbar(surf, shrink=0.5, aspect=5)
+        fig.colorbar(surf, shrink=0.5, aspect=5)
 
 
         # Plot the current best
