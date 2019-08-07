@@ -103,7 +103,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         for method in methods:
             g_test_problem.number_of_evaluation = 0;
 
-            optimiser = ScipyMinimize(g_test_problem, method, tol=tol);
+            optimiser = ScipyMinimize(g_test_problem, method, tol=tol, initial_guess=initial_guess);
             print("\tOptimiser:", optimiser.full_name);
             optimiser.setMaxIterations(max_iterations);
             optimiser.run();
@@ -133,7 +133,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         # Optimisation and visualisation
         g_test_problem.number_of_evaluation = 0;
-        optimiser = EvolutionaryAlgorithm(g_test_problem, g_number_of_individuals)
+        optimiser = EvolutionaryAlgorithm(g_test_problem, g_number_of_individuals, initial_guess=initial_guess)
         print("\tOptimiser:", optimiser.full_name);
 
         # Set the selection operator
@@ -171,7 +171,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         # Optimisation and visualisation
         '''g_test_problem.number_of_evaluation = 0;
-        optimiser = PSO(g_test_problem, g_number_of_individuals);
+        optimiser = PSO(g_test_problem, g_number_of_individuals, initial_guess=initial_guess);
         print("\tOptimiser:", optimiser.full_name);
 
         if run_id == 0 and visualisation:
@@ -192,7 +192,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
 
         # Optimisation and visualisation
-        optimiser = PureRandomSearch(g_test_problem, max_iterations);
+        optimiser = PureRandomSearch(g_test_problem, max_iterations, initial_guess=initial_guess);
         print("\tOptimiser:", optimiser.full_name);
 
         g_test_problem.number_of_evaluation = 0;
@@ -216,7 +216,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         # Optimisation and visualisation
         g_test_problem.number_of_evaluation = 0;
 
-        optimiser = SimulatedAnnealing(g_test_problem, 5000, 0.04);
+        optimiser = SimulatedAnnealing(g_test_problem, 5000, 0.04, initial_guess=initial_guess);
         print("\tOptimiser:", optimiser.full_name);
         optimiser.cooling_schedule = cooling;
 
