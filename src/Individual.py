@@ -22,4 +22,3 @@ class Individual(Solution.Solution):
         temp = Individual(self.objective_function, self.parameter_set, False);
         temp.objective = self.objective;
         return temp;
-        
