@@ -20,7 +20,7 @@ class Solution:
             self.objective = 0;
 
         # Copy the parameters if any
-        if type(aParameterSet) != type(None):
+        if not isinstance(aParameterSet, (str, type(None))):
             self.parameter_set = copy.deepcopy(aParameterSet);
 
             if aComputeObjectiveFlag:
