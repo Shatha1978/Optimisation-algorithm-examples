@@ -48,9 +48,13 @@ class Solution:
         return self.objective;
 
     def __repr__(self):
-        value = "Parameters: ";
-        value += ' '.join(str(e) for e in self.getParameter())
-        value += "\tFlag: ";
+        value = "Parameters: [";
+
+        for param in self.parameter_set:
+            value += str(param);
+            value += ',';
+            
+        value += "]\tFlag: ";
         value += str(self.flag);
         value += "\tObjective: ";
         value += str(self.getObjective());
