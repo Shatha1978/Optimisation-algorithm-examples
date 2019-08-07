@@ -67,7 +67,7 @@ def appendResultToDataFrame(aRunID, anOptimiser, aDataFrame, aColumnSet, aFilePr
 
     return aDataFrame;
 
-def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str, tol=-1, visualisation = False, aCallback = None):
+def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str, tol=-1, visualisation = False, aPreCallback = None, aPostCallback = None):
     global g_test_problem;
     g_test_problem = test_problem;
 
@@ -105,13 +105,17 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
             optimiser = ScipyMinimize(g_test_problem, method, tol=tol, initial_guess=initial_guess);
             print("\tOptimiser:", optimiser.full_name);
+
+            if not isinstance(aPreCallback, (str, type(None))):
+                aPreCallback(optimiser, file_prefix, run_id);
+
             optimiser.setMaxIterations(max_iterations);
             optimiser.run();
 
             df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-            if not isinstance(aCallback, (str, type(None))):
-                aCallback(optimiser, file_prefix, run_id);
+            if not isinstance(aPostCallback, (str, type(None))):
+                aPostCallback(optimiser, file_prefix, run_id);
 
 
         # Parameters for EA
@@ -135,6 +139,8 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         g_test_problem.number_of_evaluation = 0;
         optimiser = EvolutionaryAlgorithm(g_test_problem, g_number_of_individuals, initial_guess=initial_guess)
         print("\tOptimiser:", optimiser.full_name);
+        if not isinstance(aPreCallback, (str, type(None))):
+            aPreCallback(optimiser, file_prefix, run_id);
 
         # Set the selection operator
         #optimiser.setSelectionOperator(TournamentSelection(3));
@@ -163,8 +169,8 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-        if not isinstance(aCallback, (str, type(None))):
-            aCallback(optimiser, file_prefix, run_id);
+        if not isinstance(aPostCallback, (str, type(None))):
+            aPostCallback(optimiser, file_prefix, run_id);
 
 
 
@@ -173,6 +179,8 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         '''g_test_problem.number_of_evaluation = 0;
         optimiser = PSO(g_test_problem, g_number_of_individuals, initial_guess=initial_guess);
         print("\tOptimiser:", optimiser.full_name);
+        if not isinstance(aPreCallback, (str, type(None))):
+            aPreCallback(optimiser, file_prefix, run_id);
 
         if run_id == 0 and visualisation:
             optimiser.plotAnimation(g_iterations);
@@ -182,8 +190,8 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-        if not isinstance(aCallback, (str, type(None))):
-            aCallback(optimiser, file_prefix, run_id);
+        if not isinstance(aPostCallback, (str, type(None))):
+            aPostCallback(optimiser, file_prefix, run_id);
 
 
 
@@ -194,6 +202,8 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         # Optimisation and visualisation
         optimiser = PureRandomSearch(g_test_problem, max_iterations, initial_guess=initial_guess);
         print("\tOptimiser:", optimiser.full_name);
+        if not isinstance(aPreCallback, (str, type(None))):
+            aPreCallback(optimiser, file_prefix, run_id);
 
         g_test_problem.number_of_evaluation = 0;
 
@@ -205,8 +215,8 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-        if not isinstance(aCallback, (str, type(None))):
-            aCallback(optimiser, file_prefix, run_id);
+        if not isinstance(aPostCallback, (str, type(None))):
+            aPostCallback(optimiser, file_prefix, run_id);
 
 
 
@@ -219,6 +229,8 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         optimiser = SimulatedAnnealing(g_test_problem, 5000, 0.04, initial_guess=initial_guess);
         print("\tOptimiser:", optimiser.full_name);
         optimiser.cooling_schedule = cooling;
+        if not isinstance(aPreCallback, (str, type(None))):
+            aPreCallback(optimiser, file_prefix, run_id);
 
         if run_id == 0 and visualisation:
             optimiser.plotAnimation(max_iterations);
@@ -229,8 +241,8 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-        if not isinstance(aCallback, (str, type(None))):
-            aCallback(optimiser, file_prefix, run_id);
+        if not isinstance(aPostCallback, (str, type(None))):
+            aPostCallback(optimiser, file_prefix, run_id);
 
 
 
