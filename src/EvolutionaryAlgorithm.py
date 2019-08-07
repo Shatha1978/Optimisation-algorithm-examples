@@ -126,8 +126,6 @@ class EvolutionaryAlgorithm(Optimiser):
         offspring_population = [];
         negative_fitness_parents = []
 
-        best_individual_index = 0;
-
         # Sort index of individuals based on their fitness
         # (we use the negative of the fitness so that np.argsort returns
         # the array of indices in the right order)
