@@ -37,7 +37,7 @@ class EvolutionaryAlgorithm(Optimiser):
             self.individual_callback = aUpdateIndividualContribution;
 
         # Add initial guess if any
-        if type(self.initial_guess) != type(None):
+        if not isinstance(self.initial_guess, (str, type(None))):
             self.current_solution_set.append(IND.Individual(self.objective_function, self.initial_guess));
 
         # Create the population
