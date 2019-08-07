@@ -34,7 +34,7 @@ number_of_runs = 1;
 
 def callback(optimiser, file_prefix, run_id, global_fitness = None, parameter_set = None):
 
-    if type(global_fitness) != type(None):
+    if not isinstance(global_fitness, (str, type(None))):
         global_fitness.saveImage(parameter_set, file_prefix + optimiser.short_name + "_" + str(run_id) + ".txt");
 
     else:
