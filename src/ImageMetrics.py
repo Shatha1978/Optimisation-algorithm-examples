@@ -19,8 +19,8 @@ def linearNormalisation(anImage, aMinValue = 0, aMaxValue = 1):
 def normalise(anImage):
 
     #return zeroMeanNormalisation(anImage);
-    #return linearNormalisation(anImage);
-    return copy.deepcopy(anImage);
+    return linearNormalisation(anImage);
+    #return copy.deepcopy(anImage);
 
 def productImage(anImage1, anImage2):
     return (np.multiply(anImage1, anImage2));
@@ -31,8 +31,14 @@ def getHistogram(anImage, aNumberOfBins):
 def getMAE(aReferenceVector, aTestVector):
     return np.abs(np.subtract(aReferenceVector, aTestVector)).mean();
 
-def getRelativeError(aReferenceVector, aTestVector):
+def getCosineSimilarity(aReferenceVector, aTestVector):
+    return np.dot(aReferenceVector, aTestVector) / (LA.norm(aReferenceVector) * LA.norm(aTestVector))
+
+def getMeanRelativeError(aReferenceVector, aTestVector):
     return np.abs(np.divide(np.subtract(aReferenceVector, aTestVector), aReferenceVector)).mean();
+
+def getMaxRelativeError(aReferenceVector, aTestVector):
+    return np.abs(np.divide(np.subtract(aReferenceVector, aTestVector), aReferenceVector)).max();
 
 def getSSIM(aReferenceVector, aTestVector):
     return measure.compare_ssim( aReferenceVector, aTestVector);
@@ -56,9 +62,4 @@ def getPSNR(aReferenceVector, aTestVector):
     return measure.compare_psnr(aReferenceVector, aTestVector, aReferenceVector.max() - aReferenceVector.min());
 
 def getNCC(aReferenceVector, aTestVector):
-
-    ref = (np.copy(aReferenceVector) - aReferenceVector.mean()) / aReferenceVector.std();
-
-    test = (np.copy(aTestVector) - aTestVector.mean()) / aTestVector.std();
-
-    return np.multiply(ref, test).mean();
+    return productImage(zeroMeanNormalisation(aReferenceVector), zeroMeanNormalisation(aTestVector)).mean();
