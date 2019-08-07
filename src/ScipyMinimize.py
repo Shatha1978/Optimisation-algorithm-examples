@@ -18,7 +18,7 @@ class ScipyMinimize(Optimiser):
     ## \brief Constructor.
     # \param self
     # \param aCostFunction: The cost function to minimise
-    def __init__(self, aCostFunction, aMethodName, initial_guess = None):
+    def __init__(self, aCostFunction, aMethodName, tol=-1, initial_guess = None):
 
         super().__init__(aCostFunction, initial_guess);
 
@@ -28,16 +28,21 @@ class ScipyMinimize(Optimiser):
 
         self.max_iterations = -1;
         self.verbose = False;
+        self.tolerance = tol;
 
     def setMaxIterations(self, aMaxIterations):
         self.max_iterations = aMaxIterations;
 
     def run(self):
 
+        options = {'disp': self.verbose};
+
         if self.max_iterations > 0:
-            options = {'maxiter': self.max_iterations, 'disp': self.verbose};
-        else:
-            options = {'disp': self.verbose};
+            options['maxiter'] = self.max_iterations;
+
+        if self.tolerance > 0:
+            options['ftol'] = self.tolerance;
+            options['tol'] = self.tolerance;
 
         if self.initial_guess == None:
             self.initial_guess = self.objective_function.initialRandomGuess();

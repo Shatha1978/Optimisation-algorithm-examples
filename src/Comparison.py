@@ -67,7 +67,7 @@ def appendResultToDataFrame(aRunID, anOptimiser, aDataFrame, aColumnSet, aFilePr
 
     return aDataFrame;
 
-def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str, visualisation = False, aCallback = None):
+def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str, tol=-1, visualisation = False, aCallback = None):
     global g_test_problem;
     g_test_problem = test_problem;
 
@@ -91,19 +91,19 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         # Optimisation methods implemented in scipy.optimize
         methods = ['Nelder-Mead',
-            'Powell',
+            #'Powell',
             'CG',
-            'BFGS',
-            'L-BFGS-B',
-            'TNC',
-            'COBYLA',
-            'SLSQP'
+            #'BFGS',
+            #'L-BFGS-B',
+            #'TNC',
+            #'COBYLA',
+            #'SLSQP'
         ];
 
         for method in methods:
             g_test_problem.number_of_evaluation = 0;
 
-            optimiser = ScipyMinimize(g_test_problem, method);
+            optimiser = ScipyMinimize(g_test_problem, method, tol=tol);
             print("\tOptimiser:", optimiser.full_name);
             optimiser.setMaxIterations(max_iterations);
             optimiser.run();
