@@ -110,7 +110,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
             df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-            if type(aCallback) != type(None):
+            if not isinstance(aCallback, (str, type(None))):
                 aCallback(optimiser, file_prefix, run_id);
 
 
@@ -163,7 +163,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-        if type(aCallback) != type(None):
+        if not isinstance(aCallback, (str, type(None))):
             aCallback(optimiser, file_prefix, run_id);
 
 
@@ -182,7 +182,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-        if type(aCallback) != type(None):
+        if not isinstance(aCallback, (str, type(None))):
             aCallback(optimiser, file_prefix, run_id);
 
 
@@ -205,7 +205,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-        if type(aCallback) != type(None):
+        if not isinstance(aCallback, (str, type(None))):
             aCallback(optimiser, file_prefix, run_id);
 
 
@@ -229,7 +229,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
-        if type(aCallback) != type(None):
+        if not isinstance(aCallback, (str, type(None))):
             aCallback(optimiser, file_prefix, run_id);
 
 
