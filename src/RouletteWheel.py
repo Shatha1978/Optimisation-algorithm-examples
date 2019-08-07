@@ -31,10 +31,10 @@ class RouletteWheel(SelectionOperator):
             self.min_fitness = min(self.min_fitness, individual.getObjective());
             self.max_fitness = max(self.max_fitness, individual.getObjective());
 
-        range = self.max_fitness - self.min_fitness;
+        fitness_range = self.max_fitness - self.min_fitness;
 
         for individual in anIndividualSet:
-            self.sum_fitness += (individual.getObjective() - self.min_fitness) / range;
+            self.sum_fitness += (individual.getObjective() - self.min_fitness) / fitness_range;
 
     # Select an idividual
     # anIndividualSet: The set of individual to choose from
