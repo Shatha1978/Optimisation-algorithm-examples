@@ -18,7 +18,7 @@ class ScipyMinimize(Optimiser):
     ## \brief Constructor.
     # \param self
     # \param aCostFunction: The cost function to minimise
-    def __init__(self, aCostFunction, aMethodName, tol=-1, initial_guess = None):
+    def __init__(self, aCostFunction, aMethodName, tol, initial_guess = None):
 
         super().__init__(aCostFunction, initial_guess);
 
