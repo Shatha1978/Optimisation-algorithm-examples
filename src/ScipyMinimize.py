@@ -30,6 +30,9 @@ class ScipyMinimize(Optimiser):
         self.verbose = False;
         self.tolerance = tol;
 
+        self.best_solution_set = [];
+        self.solution_set      = [];
+
     def setMaxIterations(self, aMaxIterations):
         self.max_iterations = aMaxIterations;
 
@@ -53,14 +56,16 @@ class ScipyMinimize(Optimiser):
             result = optimize.minimize(self.objective_function.minimisationFunction,
                 self.initial_guess,
                 method=self.short_name,
-                options=options);
+                options=options,
+                callback=self.callback);
 
         elif self.short_name == 'L-BFGS-B' or self.short_name == 'TNC' or self.short_name == 'SLSQP':
             result = optimize.minimize(self.objective_function.minimisationFunction,
                 self.initial_guess,
                 method=self.short_name,
                 bounds=self.objective_function.boundaries,
-                options=options);
+                options=options,
+                callback=self.callback);
 
         else:
             result = optimize.minimize(self.objective_function.minimisationFunction,
@@ -68,6 +73,41 @@ class ScipyMinimize(Optimiser):
                 method=self.short_name,
                 bounds=self.objective_function.boundaries,
                 jac='2-point',
-                options=options);
+                options=options,
+                callback=self.callback);
 
         self.best_solution = Solution(self.objective_function, 1, result.x)
+
+    def evaluate(self, aParameterSet):
+        return self.objective_function.evaluate(aParameterSet, 1);
+
+    def runIteration(self):
+
+        if len(self.best_solution_set) > 1 and len(self.solution_set) > 1:
+            self.best_solution = self.best_solution_set.pop(0);
+            self.current_solution_set.append(self.solution_set.pop(0));
+
+
+    def callback(self, xk):
+
+        solution = Solution(self.objective_function, 1, xk);
+
+        if self.best_solution == None:
+            self.best_solution = solution;
+
+        if self.best_solution.getObjective() < solution.getObjective():
+            self.best_solution_set.append(self.best_solution)
+        else:
+            self.best_solution_set.append(solution)
+
+        self.solution_set.append(solution);
+
+
+    def update(self, i):
+        # This is the first call
+        if i == 0:
+            # Run the minimisation
+            self.run();
+
+        super().update(i);
+        print(i)

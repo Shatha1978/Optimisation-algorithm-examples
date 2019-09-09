@@ -30,7 +30,7 @@ from BlendCrossoverOperator   import *
 from GaussianMutationOperator import *
 from NewBloodOperator         import *
 
-g_number_of_individuals            = 50;
+g_number_of_individuals            = 10;
 
 g_max_mutation_sigma = 0.1;
 g_min_mutation_sigma = 0.01;
@@ -41,6 +41,24 @@ initial_temperature = 50000;
 cooling_rate = 0.98;
 
 g_test_problem = None;
+
+g_iterations = 0;
+gaussian_mutation = GaussianMutationOperator(0.1, 0.2);
+
+def visualisationCallback():
+    global g_iterations;
+    global g_max_mutation_sigma;
+    global g_min_mutation_sigma;
+    global g_current_sigma;
+    global gaussian_mutation;
+
+    # Update the mutation variance so that it varies linearly from g_max_mutation_sigma to
+    # g_min_mutation_sigma
+    if g_iterations > 1:
+        g_current_sigma -= (g_max_mutation_sigma - g_min_mutation_sigma) / (g_iterations - 1);
+
+    # Make sure the mutation variance is up-to-date
+    gaussian_mutation.setMutationVariance(g_current_sigma);
 
 def cooling():
     global initial_temperature;
@@ -69,6 +87,8 @@ def appendResultToDataFrame(aRunID, anOptimiser, aDataFrame, aColumnSet, aFilePr
 
 def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str, tol=-1, visualisation = False, aPreCallback = None, aPostCallback = None):
     global g_test_problem;
+    global g_iterations;
+
     g_test_problem = test_problem;
 
     # Store the results for each optimisation method
@@ -110,7 +130,11 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
                 aPreCallback(optimiser, file_prefix, run_id);
 
             optimiser.setMaxIterations(max_iterations);
-            optimiser.run();
+
+            if run_id == 0 and visualisation:
+                optimiser.plotAnimation(aNumberOfIterations=max_iterations, aCallback=None, aFileName=(file_prefix + "_" + optimiser.short_name + "_%d.png"));
+            else:
+                optimiser.run();
 
             df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
@@ -120,20 +144,6 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         # Parameters for EA
         g_iterations = int(max_iterations / g_number_of_individuals);
-
-        def visualisationCallback():
-            global g_current_sigma;
-
-            # Update the mutation variance so that it varies linearly from g_max_mutation_sigma to
-            # g_min_mutation_sigma
-            if g_iterations > 1:
-                g_current_sigma -= (g_max_mutation_sigma - g_min_mutation_sigma) / (g_iterations - 1);
-
-            # Make sure the mutation variance is up-to-date
-            gaussian_mutation.setMutationVariance(g_current_sigma);
-
-
-
 
         # Optimisation and visualisation
         g_test_problem.number_of_evaluation = 0;
@@ -150,7 +160,6 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         # Create the genetic operators
         elitism = ElitismOperator(0.1);
         new_blood = NewBloodOperator(0.1);
-        gaussian_mutation = GaussianMutationOperator(0.1, 0.2);
         blend_cross_over = BlendCrossoverOperator(0.6, gaussian_mutation);
 
         # Add the genetic operators to the EA
@@ -161,7 +170,8 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
 
         if run_id == 0 and visualisation:
-            optimiser.plotAnimation(g_iterations, visualisationCallback);
+            optimiser.plotAnimation(aNumberOfIterations=g_iterations, aCallback=visualisationCallback,  aFileName=(file_prefix + "_" + optimiser.short_name + "_%d.png"));
+
         else:
             for _ in range(1, g_iterations):
                 optimiser.runIteration();
@@ -183,7 +193,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
             aPreCallback(optimiser, file_prefix, run_id);
 
         if run_id == 0 and visualisation:
-            optimiser.plotAnimation(g_iterations);
+            optimiser.plotAnimation(aNumberOfIterations=max_iterations, aCallback=None, aFileName=(file_prefix + "_" + optimiser.short_name + "_%d.png"));
         else:
             for _ in range(g_iterations - 1):
                 optimiser.runIteration();
@@ -208,7 +218,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         g_test_problem.number_of_evaluation = 0;
 
         if run_id == 0 and visualisation:
-            optimiser.plotAnimation(max_iterations);
+            optimiser.plotAnimation(aNumberOfIterations=max_iterations, aCallback=None, aFileName=(file_prefix + "_" + optimiser.short_name + "_%d.png"));
         else:
             for _ in range(max_iterations):
                 optimiser.runIteration();
@@ -233,7 +243,7 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
             aPreCallback(optimiser, file_prefix, run_id);
 
         if run_id == 0 and visualisation:
-            optimiser.plotAnimation(max_iterations);
+            optimiser.plotAnimation(aNumberOfIterations=max_iterations, aCallback=None, aFileName=(file_prefix + "_" + optimiser.short_name + "_%d.png"));
         else:
             for _ in range(1, max_iterations):
                 optimiser.runIteration();
