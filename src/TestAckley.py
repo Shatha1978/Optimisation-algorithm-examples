@@ -5,7 +5,7 @@ from AckleyFunction import *
 import Comparison
 
 # Stopping criteria
-max_iterations = 200;
+max_iterations = 100;
 
 # Instantiate the objective function
 test_problem = AckleyFunction(2);
@@ -13,4 +13,4 @@ test_problem = AckleyFunction(2);
 # Number of runs
 number_of_runs = 15;
 
-Comparison.run(test_problem, max_iterations, number_of_runs, "ackley_", True);
+Comparison.run(test_problem, max_iterations, number_of_runs, "ackley_", tol=-1, visualisation = True, aPreCallback = None, aPostCallback = None);
