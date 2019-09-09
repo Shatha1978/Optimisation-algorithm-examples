@@ -140,9 +140,9 @@ class Optimiser:
 
             # Set up formatting for the movie files
             if aFileName != "":
-                Writer = animation.writers['ffmpeg']
+                Writer = animation.writers['imagemagick']
                 writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
-                ani.save('test.mp4', writer=writer)
+                ani.save(aFileName, writer=writer)
             else:
                 plt.show();
         else:
