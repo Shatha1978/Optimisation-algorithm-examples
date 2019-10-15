@@ -2,23 +2,48 @@ import copy; # For deepcopy
 
 class Solution:
 
-    ''' Class to store the solution of an optimisation problem. It deals with minimisation or maximisation problems regardless of the optimisation method. '''
+    '''
+    Class to store the solution of an optimisation problem. It deals with minimisation or maximisation problems regardless of the optimisation method.
+    '''
 
     def __init__(self, anObjectiveFunction, aFlag, aParameterSet, aComputeObjectiveFlag = True):
         '''
         Constructor
 
-        Parameters:
-        anObjectiveFunction (function): the callback corresponding to the objective function
-        aFlag (int): 1 if the objective function is a minimisation, 2 if the objective function is a maximisation, 0 otherwise
-        aParameterSet (array of float): the solutino parameters
-        aComputeObjectiveFlag (bool): compute the objective value in the constructor when the Solution is created (default: True)
+        @param anObjectiveFunction: the callback corresponding to the objective function
+        @type anObjectiveFunction: function callback
+        @param aFlag: 1 if the objective function is a minimisation, 2 if the objective function is a maximisation, 0 otherwise
+        @type aFlag: int
+        @param aParameterSet: the solution parameters
+        @type aParameterSet: array of float
+        @param aComputeObjectiveFlag: compute the objective value in the constructor when the Solution is created (default: True)
+        @type aComputeObjectiveFlag: bool
         '''
 
         # Store the class attributes
         self.objective_function = anObjectiveFunction;
+        '''
+        @ivar objective_function: the callback corresponding to the objective function
+        @type anObjectiveFunction: function callback
+        '''
+
         self.flag = aFlag;
+        '''
+        @ivar flag: 1 if the objective function is a minimisation, 2 if the objective function is a maximisation, 0 otherwise.
+        @type flag: int
+        '''
+
         self.parameter_set = [];
+        '''
+        @ivar parameter_set: the solution parameters.
+        @type parameter_set: array of float
+        '''
+
+        self.objective = None;
+        '''
+        @ivar objective: Objective value.
+        @type objective: float
+        '''
 
         # Initialise the objective value
         if self.flag == 1: # Minimisation
@@ -40,7 +65,7 @@ class Solution:
         Create a copy of the current solution
 
         Returns:
-        Solution: the new copy
+            Solution: the new copy
         '''
 
         temp = Solution(self.objective_function, self.flag, self.parameter_set, False);
@@ -53,7 +78,7 @@ class Solution:
         Compute the objective value
 
         Returns:
-        float: the objective value
+            float: the objective value
         '''
 
         # Compute the fitness function
@@ -66,10 +91,10 @@ class Solution:
         Get the i-th parameter of the solution
 
         Parameters:
-        i (int): the index
+            i (int): the index
 
         Returns:
-        float: the i-th parameter
+            float: the i-th parameter
         '''
         if i >= len(self.parameter_set):
             raise IndexError;
@@ -81,7 +106,7 @@ class Solution:
         Get the current objective value (what is already computed)
 
         Returns:
-        float: the objective value
+            float: the objective value
         '''
         return self.objective;
 
@@ -90,7 +115,7 @@ class Solution:
         Output the attributes of the instance
 
         Returns:
-        string: the attributes of the instance
+            string: the attributes of the instance
         '''
         value = "Parameters: [";
 

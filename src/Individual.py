@@ -24,9 +24,9 @@ class Individual(Solution.Solution):
         Constructor
 
         Parameters:
-        anObjectiveFunction (function): the callback corresponding to the objective function
-        aParameterSet (array of float): the solutino parameters (default: None)
-        aComputeObjectiveFlag (bool): compute the objective value in the constructor when the Solution is created (default: False)
+            anObjectiveFunction (function): the callback corresponding to the objective function
+            aParameterSet (array of float): the solutino parameters (default: None)
+            aComputeObjectiveFlag (bool): compute the objective value in the constructor when the Solution is created (default: False)
         '''
 
         super().__init__(anObjectiveFunction, 2, aParameterSet, aComputeFitnessFlag); # 2 for maximisation
@@ -36,7 +36,7 @@ class Individual(Solution.Solution):
         Create a copy of the current solution
 
         Returns:
-        Solution: the new copy
+            Solution: the new copy
         '''
 
         temp = Individual(self.objective_function, self.parameter_set, False);
