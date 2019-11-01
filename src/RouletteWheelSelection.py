@@ -6,7 +6,7 @@ import random
 from SelectionOperator import *
 
 # The subclass that inherits of SelectionOperator
-class RouletteWheel(SelectionOperator):
+class RouletteWheelSelection(SelectionOperator):
 
     # Constructor
     def __init__(self):
@@ -43,7 +43,7 @@ class RouletteWheel(SelectionOperator):
     def __select__(self, anIndividualSet, aFlag):
 
         if aFlag == False:
-            raise NotImplementedError("Selecting a bad individual is not implemented in RouletteWheel!")
+            raise NotImplementedError("Selecting a bad individual is not implemented in RouletteWheelSelection!")
 
         # Random number between(0 - self.sum_fitness)
         random_number = self.system_random.uniform(0.0, self.sum_fitness)
