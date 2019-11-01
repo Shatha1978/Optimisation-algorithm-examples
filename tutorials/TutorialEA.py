@@ -4,7 +4,7 @@ from EvolutionaryAlgorithm import *
 
 # Selection operators
 from TournamentSelection      import *
-from RouletteWheel            import *
+from RouletteWheelSelection   import *
 from RankSelection            import *
 
 # Genetic operators
@@ -33,7 +33,7 @@ print ("Initial best individual: ", optimiser.best_solution)
 
 # Set the selection operator
 #optimiser.setSelectionOperator(TournamentSelection(3));
-#optimiser.setSelectionOperator(RouletteWheel());
+#optimiser.setSelectionOperator(RouletteWheelSelection());
 optimiser.setSelectionOperator(RankSelection());
 
 # Create the genetic operators
@@ -48,7 +48,18 @@ optimiser.addGeneticOperator(gaussian_mutation);
 optimiser.addGeneticOperator(blend_cross_over);
 optimiser.addGeneticOperator(elitism);
 
+# Run the evolutionary loop
 for i in range(1, number_of_generation):
-    print ("Run Generation ", i, "/", number_of_generation)
+    print ("Run Generation ", i, "/", number_of_generation);
     optimiser.runIteration();
-    print ("Best individual: ", optimiser.best_solution)
+    print ("Best individual: ", optimiser.best_solution);
+
+# Get the final answer
+print ("Final answer: ", optimiser.best_solution);
+
+# Get each parameter
+for param in optimiser.best_solution.parameter_set:
+    print(param);
+
+# Get the fitness function
+print ("Fitness function: ", optimiser.best_solution.objective);

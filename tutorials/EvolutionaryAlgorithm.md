@@ -1,29 +1,49 @@
+It is assumed here that you completed the previous tutorial on how to define your objective function. See [TestProblem.py](TestProblem.py).
 
+The main package for evolutionary algorithms is in [EvolutionaryAlgorithm.py](../src/EvolutionaryAlgorithm.py):
 
 ```python
-#!/usr/bin/env python3
-
 from EvolutionaryAlgorithm import *
+```
 
+Popular selection mechanism are already implemented. The base class is in [SelectionOperator.py](SelectionOperator). It can be overloaded to implement actual operators. Rank selection, roulette wheel selection, and tournament selection operators are in:
+
+- [RankSelection.py](../src/RankSelection.py):
+- [RouletteWheelSelection.py](../src/RouletteWheelSelection.py):
+- [TournamentSelection.py](../src/TournamentSelection.py):
+
+```python
 # Selection operators
 from TournamentSelection      import *
 from RouletteWheel            import *
 from RankSelection            import *
+```
 
+
+```python
 # Genetic operators
 from ElitismOperator          import *
 from BlendCrossoverOperator   import *
 from GaussianMutationOperator import *
 from NewBloodOperator         import *
 
+# Import objective function
+from TestProblem         import *
+
+# Create test problem
+test_problem = TestProblem();
+
+
 # Parameters for EA
-g_number_of_individuals            = 100;
-g_number_of_generation             = 100;
+number_of_individuals            = 10;
+number_of_generation             = 10;
 
 # Create the optimiser
-optimiser = EvolutionaryAlgorithm(g_test_problem,
-    g_number_of_individuals,
-    initial_guess=initial_guess);
+optimiser = EvolutionaryAlgorithm(test_problem,
+    number_of_individuals);
+
+
+print ("Initial best individual: ", optimiser.best_solution)
 
 # Set the selection operator
 #optimiser.setSelectionOperator(TournamentSelection(3));
@@ -33,6 +53,7 @@ optimiser.setSelectionOperator(RankSelection());
 # Create the genetic operators
 elitism = ElitismOperator(0.1);
 new_blood = NewBloodOperator(0.1);
+gaussian_mutation = GaussianMutationOperator(0.1, 0.2);
 blend_cross_over = BlendCrossoverOperator(0.6, gaussian_mutation);
 
 # Add the genetic operators to the EA
@@ -41,87 +62,25 @@ optimiser.addGeneticOperator(gaussian_mutation);
 optimiser.addGeneticOperator(blend_cross_over);
 optimiser.addGeneticOperator(elitism);
 
-for _ in range(1, g_number_of_generation):
+# Run the evolutionary loop
+for i in range(1, number_of_generation):
+    print ("Run Generation ", i, "/", number_of_generation);
     optimiser.runIteration();
+    print ("Best individual: ", optimiser.best_solution);
 
-# Get the best individual
-...
+# Get the final answer
+print ("Final answer: ", optimiser.best_solution);
 
+# Get each parameter
+for param in optimiser.best_solution.parameter_set:
+    print(param);
+
+# Get the fitness function
+print ("Fitness function: ", optimiser.best_solution.objective);
 ```
-Select the selection operator
 
-```python
-class SelectionOperator:
 
-    # Constructor
-    # name: name of the selection operator
-    def __init__(self, name: str="Unspecified selection operator"):
-        self.name = name;
+Get the source code of the tutorial:
 
-    # Accessor on the name of the operator
-    def getName(self) -> str:
-        return self.name;
-
-    # Select a good individual from anIndividualSet
-    def select(self, anIndividualSet):
-        return self.selectGood(anIndividualSet);
-
-    # Select a good individual from anIndividualSet
-    # Useful for a steady-state EA
-    def selectGood(self, anIndividualSet):
-        return self.__select__(anIndividualSet, True);
-
-    # Select a bad individual from anIndividualSet
-    # Useful for a steady-state EA
-    def selectBad(self, anIndividualSet):
-        return self.__select__(anIndividualSet, False);
-
-    # Run this method once per generation, before any selection is done. Useful for ranking the individuals
-    def preProcess(self, anIndividualSet):
-        raise NotImplementedError("Subclasses should implement this!")
-
-    # Abstract method to perform the actual selection
-    def __select__(self, anIndividualSet, aFlag): # aFlag == True for selecting good individuals,
-                                                  # aFlag == False for selecting bad individuals,
-        raise NotImplementedError("Subclasses should implement this!")
-
-    # Method used for print()
-    def __str__(self) -> str:
-        return "name:\t\"" + self.name + "\"";
-
-```
-Select the genetic operator
-
-```python
-
-# The superclass to implement genetic operators.
-# It is an abstract class.
-class GeneticOperator:
-
-    # Constructor
-    # aProbability: operator's probability
-    def __init__(self, aProbability: float):
-        self.__name__ = "Unspecified genetic operator";
-        self.probability = aProbability;
-        self.use_count = 0;
-
-    # Accessor on the operator's name
-    def getName(self) -> str:
-        return self.__name__;
-
-    # Accessor on the operator's probability
-    def getProbability(self) -> float:
-        return self.probability;
-
-    # Set the operator's probability
-    def setProbability(self, aProbability: float):
-        self.probability = aProbability;
-
-    # Abstract method to perform the operator's actual action
-    def apply(self, anEA):
-        raise NotImplementedError("Subclasses should implement this!")
-
-    # Method used for print()
-    def __str__(self):
-        return "name:\t\"" + self.__name__ + "\"\tprobability:\t" + str(self.probability) + "\"\tuse count:\t" + str(self.use_count);
-```
+- [TestProblem.py](TestProblem.py)
+- [TutorialEA.py](TutorialEA.py)
