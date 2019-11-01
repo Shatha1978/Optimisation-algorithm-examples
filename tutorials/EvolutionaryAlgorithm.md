@@ -1,17 +1,17 @@
 It is assumed here that you completed the previous tutorial on how to define your objective function. See [TestProblem.py](TestProblem.py).
 
 The main package for evolutionary algorithms is in [EvolutionaryAlgorithm.py](../src/EvolutionaryAlgorithm.py):
-
 ```python
 from EvolutionaryAlgorithm import *
 ```
 
 Popular selection mechanism are already implemented. The base class is in [SelectionOperator.py](SelectionOperator). It can be overloaded to implement actual operators. Rank selection, roulette wheel selection, and tournament selection operators are in:
 
-- [RankSelection.py](../src/RankSelection.py):
-- [RouletteWheelSelection.py](../src/RouletteWheelSelection.py):
-- [TournamentSelection.py](../src/TournamentSelection.py):
+- [RankSelection.py](../src/RankSelection.py),
+- [RouletteWheelSelection.py](../src/RouletteWheelSelection.py),
+- [TournamentSelection.py](../src/TournamentSelection.py).
 
+Import the packages using:
 ```python
 # Selection operators
 from TournamentSelection      import *
