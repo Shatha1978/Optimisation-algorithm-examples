@@ -18,7 +18,12 @@ from TournamentSelection      import *
 from RouletteWheel            import *
 from RankSelection            import *
 ```
+Popular operator mechanism are already implemented. The base class is in [GeneticOperator.py](GeneticOperator). It can be overloaded to implement actual operators. Elitism, BlendCrossover, GaussianMutation and  NewBlood operators are in:
 
+- [ElitismOperator.py](../src/ElitismOperator.py),
+- [BlendCrossoverOperator.py](../src/BlendCrossoverOperator.py),
+- [GaussianMutationOperator.py](../src/GaussianMutationOperator.py),
+- [NewBloodOperator.py](../src/NewBloodOperator.py).
 
 ```python
 # Genetic operators
