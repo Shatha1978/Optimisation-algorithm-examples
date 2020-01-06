@@ -17,6 +17,12 @@ class ObjectiveFunction:
     # Get a SystemRandom instance out of random package
     system_random = random.SystemRandom();
 
+    MINIMISATION = 1;
+    MINIMIZATION = 1;
+
+    MAXIMISATION = 2;
+    MAXIMIZATION = 2;
+
     # Constructor
     # aNumberOfDimensions: the number of dimensions (e.g. how many parameters)
     # aBoundarySet: the boundaries
