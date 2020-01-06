@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Add a progress bar
+from progress.bar import IncrementalBar
+
 from EvolutionaryAlgorithm import *
 
 # Selection operators
@@ -49,19 +52,18 @@ optimiser.addGeneticOperator(blend_cross_over);
 optimiser.addGeneticOperator(elitism);
 
 # Run the evolutionary loop
-for i in range(1, number_of_generation):
-    print ("Run Generation ", i, "/", number_of_generation);
+bar = IncrementalBar('Generation', max=number_of_generation, suffix='%(index)d/%(max)d - %(percent).1f%% - %(eta)ds')
+for i in range(number_of_generation):
     optimiser.runIteration();
-    parameters, objective = optimiser.getBestSolution();
-    print ("Best individual: ", parameters, objective);
+    bar.next();
+bar.finish();
 
 # Get the final answer
 parameters, objective = optimiser.getBestSolution();
-print ("Final answer: ", parameters);
-
-# Get each parameter
-for param in optimiser.best_solution.parameter_set:
-    print(param);
+print ("Problem solution: ", parameters);
 
 # Get the fitness function
 print ("Fitness function: ", objective);
+
+# Get the Euclidean distance to the global optimum
+print ("Euclidean distance to the global optimum: ", test_problem.getEuclideanDistanceToGlobalOptimum(parameters));
