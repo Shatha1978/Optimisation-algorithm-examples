@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 import matplotlib
 matplotlib.use("TkAgg")
@@ -118,6 +119,15 @@ class Optimiser:
             ydata2.append(individual.getParameter(1));
             zdata2.append(individual.getObjective());
         self.scat2._offsets3d = (xdata2, ydata2, zdata2)
+
+    def getBestSolution(self):
+        param = copy.deepcopy(self.best_solution.parameter_set);
+        objective = self.best_solution.getObjective();
+
+        if self.objective_function.flag != self.best_solution.flag:
+            objective *= -1;
+            
+        return param, objective;
 
     def plotAnimation(self, aNumberOfIterations, aCallback = None, aFileName = ""):
 
