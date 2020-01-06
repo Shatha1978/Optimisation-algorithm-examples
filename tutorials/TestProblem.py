@@ -22,6 +22,7 @@ class TestProblem(ObjectiveFunction):
         self.a = 20;
         self.b = 0.2;
         self.c = 2 * math.pi;
+        self.global_optimum = [0, 0];
 
 
     def objectiveFunction(self, aSolution):
