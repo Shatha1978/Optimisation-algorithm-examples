@@ -2,7 +2,12 @@ import random
 import math
 import copy
 
-class Particle:
+# Import the superclass (also called base class), which is an abstract class,
+# to implement the subclass Individual
+import Solution
+
+# The subclass that inherits of Solution
+class Particle(Solution.Solution):
 
     # Get a SystemRandom instance out of random package
     system_random = random.SystemRandom();
