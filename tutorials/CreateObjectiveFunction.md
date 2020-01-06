@@ -22,16 +22,17 @@ class TestProblem(ObjectiveFunction):
 Create a constructor
 ```python
     # Constructor
-    # aNumberOfDimensions: the number of dimensions (e.g. how many parameters)
-    def __init__(self, aNumberOfDimensions: int):
+    def __init__(self):
+
+        number_of_dimensions = 2;
 
         # Store the boundaries
         self.boundaries = [];
-        for _ in range(aNumberOfDimensions):
+        for _ in range(number_of_dimensions):
             self.boundaries.append([-32.768, 32.768]);
 
         # Call the constructor of the superclass
-        super().__init__(aNumberOfDimensions,
+        super().__init__(number_of_dimensions,
                          self.boundaries,
                          self.objectiveFunction,
                          ObjectiveFunction.MINIMISATION);
@@ -74,13 +75,20 @@ from ObjectiveFunction import *
 
 
 class TestProblem(ObjectiveFunction):
-    def __init__(self, aNumberOfDimensions):
+    def __init__(self):
+
+        number_of_dimensions = 2;
+
+        self.boundaries = [];
+        for _ in range(number_of_dimensions):
+            self.boundaries.append([-32.768, 32.768]);
+
+        super().__init__(number_of_dimensions,
+                         self.boundaries,
+                         self.objectiveFunction,
+                         ObjectiveFunction.MINIMISATION);
 
         self.name = "Ackley Function";
-
-        self.global_optimum = [];
-        for _ in range(self.number_of_dimensions):
-            self.global_optimum.append(0.0);
 
         self.a = 20;
         self.b = 0.2;
