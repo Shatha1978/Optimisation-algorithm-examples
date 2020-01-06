@@ -21,8 +21,8 @@ test_problem = TestProblem();
 
 
 # Parameters for EA
-number_of_individuals            = 10;
-number_of_generation             = 10;
+number_of_individuals            = 50;
+number_of_generation             = 50;
 
 # Create the optimiser
 optimiser = EvolutionaryAlgorithm(test_problem,
@@ -52,14 +52,16 @@ optimiser.addGeneticOperator(elitism);
 for i in range(1, number_of_generation):
     print ("Run Generation ", i, "/", number_of_generation);
     optimiser.runIteration();
-    print ("Best individual: ", optimiser.best_solution);
+    parameters, objective = optimiser.getBestSolution();
+    print ("Best individual: ", parameters, objective);
 
 # Get the final answer
-print ("Final answer: ", optimiser.best_solution);
+parameters, objective = optimiser.getBestSolution();
+print ("Final answer: ", parameters);
 
 # Get each parameter
 for param in optimiser.best_solution.parameter_set:
     print(param);
 
 # Get the fitness function
-print ("Fitness function: ", optimiser.best_solution.objective);
+print ("Fitness function: ", objective);
