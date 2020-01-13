@@ -1,0 +1,245 @@
+import math
+
+import numpy as np
+
+import matplotlib.pyplot as plt
+
+from skimage.io import imread, imsave
+#from skimage import data_dir
+from skimage.transform import radon, iradon, iradon_sart
+from scipy.ndimage import zoom
+from sklearn import preprocessing
+
+
+from ObjectiveFunction import *
+from ImageMetrics import *;
+
+
+NoneType = type(None);
+
+
+def normalise(image):
+    return (image - image.mean()) / image.std();
+
+class TomographyGlobalFitness(ObjectiveFunction):
+    def __init__(self, anInputImage, aNumberOfAngles=180, aPeakValue = 100, k = -1):
+
+        self.loadImageData(anInputImage, aNumberOfAngles, aPeakValue);
+
+        # Store the image simulated by the flies
+        self.population_image_data = np.zeros(self.noisy.shape, self.noisy.dtype)
+
+        self.population_sinogram_data = np.zeros(self.projections.shape, self.projections.dtype)
+
+        self.fig = None;
+        ax  = None;
+        self.global_fitness_set = [];
+        self.global_error_term_set = [];
+        self.global_regularisation_term_set = [];
+        self.zncc_set = [];
+        self.k = k;
+        number_of_dimensions = 2;
+        self.current_population = None;
+        self.number_of_calls = 0;
+
+        self.boundaries = [];
+        for _ in range(number_of_dimensions):
+            self.boundaries.append([0, max(self.noisy.shape) - 1]);
+
+        super().__init__(number_of_dimensions,
+                         self.boundaries,
+                         self.objectiveFunction,
+                         ObjectiveFunction.MINIMISATION);
+
+        self.name = "cityblock";
+
+    def objectiveFunction(self, aParameterSet, aSavePopulationFlag = True):
+
+        self.number_of_calls += 1;
+
+        image_data = np.zeros(self.noisy.shape, self.noisy.dtype)
+
+        individual_weight = self.total_weight / (len(aParameterSet) / 2);
+
+        for i,j in zip(aParameterSet[0::2], aParameterSet[1::2]):
+            x = math.floor(i);
+            y = math.floor(j);
+
+            image_data[y,x] += individual_weight;
+
+        sinogram_data = radon(image_data, theta=self.theta, circle=False)
+
+        error_term = math.sqrt(np.square(sinogram_data.flatten() - self.projections.flatten()).mean());
+        fitness = error_term;
+
+        image_prewitt_h = filters.prewitt_h(image_data);
+        image_prewitt_v = filters.prewitt_v(image_data);
+
+        tv_norm = 0.5 * getTV(image_data);
+
+        if self.k > 0.0:
+
+            regularisation_term = self.k * tv_norm;
+            fitness += regularisation_term;
+
+        if aSavePopulationFlag:
+            self.current_population = copy.deepcopy(aParameterSet);
+            self.population_image_data = image_data;
+            self.population_sinogram_data = sinogram_data;
+            self.global_fitness_set.append(fitness);
+            self.global_error_term_set.append(error_term);
+            self.global_regularisation_term_set.append(tv_norm);
+            self.zncc_set.append(getNCC(self.image, self.population_image_data));
+
+        return fitness;
+
+
+    def loadImageData(self, anInputImage, aNumberOfAngles, aPeakValue):
+        # Load the phantom (considered as unknown)
+        data_dir = '.';
+        image = imread(anInputImage, as_gray=True)
+
+        # Zoom out
+        image = zoom(image, 0.5)
+
+        # Add some noise using the Poisson distribution
+        self.noisy = np.random.poisson(image / 255.0 * aPeakValue) / aPeakValue * 255  # noisy image
+
+        # Convert from uint8 to float
+        self.image = image.astype(np.float)
+
+        # Compute the Radon transform
+        self.theta = np.linspace(0., 180., aNumberOfAngles, endpoint=False)
+        self.projections = radon(self.noisy, theta=self.theta, circle=False)
+
+        self.total_weight = np.sum(self.noisy);
+
+        # Perform the FBP reconstruction
+        self.fbp_reconstruction = iradon(self.projections,
+            theta=self.theta,
+            filter="hann",
+            interpolation="cubic",
+            circle=False)
+
+        self.FBP_zncc = getNCC(self.image, self.fbp_reconstruction);
+
+        # Perform the SART reconstruction
+        self.sart_reconstruction = cropCenter(iradon_sart(self.projections,
+            theta=self.theta, relaxation=0.05), self.image.shape[1], self.image.shape[0]);
+
+        self.SART_zncc = getNCC(self.image, self.sart_reconstruction);
+
+    def plot(self, fig, ax, aGenerationID, aTotalNumberOfGenerations):
+
+        window_title = "Generation " + str(aGenerationID) + "/" + str(aTotalNumberOfGenerations) + " - Global fitness: " + str(self.global_fitness_set[-1]);
+
+        fig.canvas.set_window_title(window_title)
+        theta = [];
+        theta.append(self.theta[0])
+
+        if theta[-1] != self.theta[math.floor(len(self.theta) * 0.25)]:
+            theta.append(self.theta[math.floor(len(self.theta) * 0.25)])
+
+        if theta[-1] != self.theta[math.floor(len(self.theta) * 0.5)]:
+            theta.append(self.theta[math.floor(len(self.theta) * 0.5)])
+
+        if theta[-1] != self.theta[math.floor(len(self.theta) * 0.75)]:
+            theta.append(self.theta[math.floor(len(self.theta) * 0.75)])
+
+        #plt.axis([0, 10, 0, 1])
+
+        # Create a figure using Matplotlib
+        # It constains 5 sub-figures
+        if isinstance(self.fig, NoneType):
+
+            self.fig = 1;
+
+            # Plot the original image
+            ax[0, 0].set_title("Original");
+            ax[0, 0].imshow(self.image, cmap=plt.cm.Greys_r)
+
+            # Plot the noisy image
+            ax[0, 1].set_title("Noisy");
+            ax[0, 1].imshow(self.noisy, cmap=plt.cm.Greys_r)
+
+            # Plot some projections
+            projections = radon(self.noisy, theta=theta, circle=False)
+            title = "Projections at\n";
+
+            for i in range(len(theta) - 1):
+                title += str(theta[i]) + ", ";
+
+            title += 'and ' + \
+                str(theta[len(theta) - 1]) + \
+                " degrees";
+
+            ax[1, 0].plot(projections);
+            ax[1, 0].set_title(title)
+            ax[1, 0].set_xlabel("Projection axis");
+            ax[1, 0].set_ylabel("Intensity");
+
+            # Plot the sinogram
+            ax[1, 1].set_title("Radon transform\n(Sinogram)");
+            ax[1, 1].set_xlabel("Projection axis");
+            ax[1, 1].set_ylabel("Intensity");
+            ax[1, 1].imshow(self.projections)
+
+            # Plot the FBP reconstruction
+            ax[2, 0].set_title("FBP reconstruction\nfrom sinogram")
+            ax[2, 0].imshow(self.fbp_reconstruction, cmap=plt.cm.Greys_r)
+
+            # Plot the FBP reconstruction error map
+            ax[2, 1].set_title("FBP reconstruction error")
+            ax[2, 1].imshow(self.fbp_reconstruction - self.image, cmap=plt.cm.Greys_r)
+
+            # Plot the SART reconstruction
+            ax[3, 0].set_title("SART reconstruction\nfrom sinogram")
+            ax[3, 0].imshow(self.sart_reconstruction, cmap=plt.cm.Greys_r)
+
+            # Plot the SART reconstruction error map
+            ax[3, 1].set_title("SART reconstruction error")
+            ax[3, 1].imshow(self.sart_reconstruction - self.image, cmap=plt.cm.Greys_r)
+
+            # Plot some projections
+            ax[4, 0].set_title(title)
+            ax[4, 0].set_xlabel("Projection axis");
+            ax[4, 0].set_ylabel("Intensity");
+
+            # Plot the sinogram
+            ax[4, 1].set_title("Radon transform\n(Sinogram)");
+            ax[4, 1].set_xlabel("Projection axis");
+            ax[4, 1].set_ylabel("Intensity");
+
+            # Plot the Evolutionary reconstruction
+            ax[5, 0].set_title("Evolutionary reconstruction\nfrom sinogram")
+
+            # Plot the Evolutionary reconstruction error map
+            ax[5, 1].set_title("Evolutionary reconstruction error")
+
+            # Plot the global fitness
+            ax[6, 0].set_title("Global fitness")
+
+            ax[6, 1].set_title("Reconstruction ZNCC")
+            ax[6, 1].legend(loc='lower right')
+            plt.subplots_adjust(hspace=0.4, wspace=0.5)
+
+        projections = radon(self.population_image_data, theta=theta, circle=False)
+        ax[4, 0].clear();
+        ax[4, 0].plot(projections);
+
+        # Plot the sinogram
+        ax[4, 1].imshow(self.population_sinogram_data)
+
+        # Plot the Evolutionary reconstruction
+        ax[5, 0].imshow(self.population_image_data, cmap=plt.cm.Greys_r)
+
+        # Plot the Evolutionary reconstruction error map
+        ax[5, 1].imshow(self.population_image_data - self.image, cmap=plt.cm.Greys_r)
+
+        ax[6, 0].clear();
+        ax[6, 0].plot(self.global_fitness_set);
+
+        ax[6, 1].clear();
+        ax[6, 1].plot(np.full(len(self.zncc_set), self.FBP_zncc), label="FBP");
+        ax[6, 1].plot(np.full(len(self.zncc_set), self.SART_zncc), label="SART");
+        ax[6, 1].plot(self.zncc_set, label="FA");
