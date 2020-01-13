@@ -12,7 +12,7 @@ from sklearn import preprocessing
 
 
 from ObjectiveFunction import *
-from ImageMetrics import *;
+import ImageMetrics as IM;
 
 
 NoneType = type(None);
@@ -22,7 +22,7 @@ def normalise(image):
     return (image - image.mean()) / image.std();
 
 class TomographyGlobalFitness(ObjectiveFunction):
-    def __init__(self, anInputImage, aNumberOfAngles=180, aPeakValue = 100, k = -1):
+    def __init__(self, anInputImage, anObjective, aNumberOfAngles=180, aPeakValue = 100, k = -1):
 
         self.loadImageData(anInputImage, aNumberOfAngles, aPeakValue);
 
@@ -42,6 +42,45 @@ class TomographyGlobalFitness(ObjectiveFunction):
         self.current_population = None;
         self.number_of_calls = 0;
 
+        if anObjective == "MAE":
+            type_of_optimisation = ObjectiveFunction.MINIMISATION
+            self.image_metrics_function = IM.getMAE;
+        elif anObjective == "MSE":
+            type_of_optimisation = ObjectiveFunction.MINIMISATION
+            self.image_metrics_function = IM.getMSE;
+        elif anObjective == "RMSE":
+            type_of_optimisation = ObjectiveFunction.MINIMISATION
+            self.image_metrics_function = IM.getRMSE;
+        elif anObjective == "NRMSE_euclidean":
+            type_of_optimisation = ObjectiveFunction.MINIMISATION
+            self.image_metrics_function = IM.getNRMSE_euclidean;
+        elif anObjective == "NRMSE_mean":
+            type_of_optimisation = ObjectiveFunction.MINIMISATION
+            self.image_metrics_function = IM.getNRMSE_mean;
+        elif anObjective == "NRMSE_minMax":
+            type_of_optimisation = ObjectiveFunction.MINIMISATION
+            self.image_metrics_function = IM.getNRMSE_minMax;
+        elif anObjective == "mean_relative_error":
+            type_of_optimisation = ObjectiveFunction.MINIMISATION
+            self.image_metrics_function = IM.getMeanRelativeError;
+        elif anObjective == "max_relative_error":
+            type_of_optimisation = ObjectiveFunction.MINIMISATION
+            self.image_metrics_function = IM.getMaxRelativeError;
+        elif anObjective == "cosine_similarity":
+            type_of_optimisation = ObjectiveFunction.MAXIMISATION
+            self.image_metrics_function = IM.getCosineSimilarity;
+        elif anObjective == "SSIM":
+            type_of_optimisation = ObjectiveFunction.MAXIMISATION
+            self.image_metrics_function = IM.getSSIM;
+        elif anObjective == "PSNR":
+            type_of_optimisation = ObjectiveFunction.MAXIMISATION
+            self.image_metrics_function = IM.getPSNR;
+        elif anObjective == "NCC" or anObjective == "ZNCC":
+            type_of_optimisation = ObjectiveFunction.MAXIMISATION
+            self.image_metrics_function = IM.getNCC;
+        else:
+            raise ValueError('Invalid objective function "%s".' % (anObjective));
+
         self.boundaries = [];
         for _ in range(number_of_dimensions):
             self.boundaries.append([0, max(self.noisy.shape) - 1]);
@@ -49,9 +88,9 @@ class TomographyGlobalFitness(ObjectiveFunction):
         super().__init__(number_of_dimensions,
                          self.boundaries,
                          self.objectiveFunction,
-                         ObjectiveFunction.MINIMISATION);
+                         type_of_optimisation);
 
-        self.name = "cityblock";
+        self.name = "anObjective";
 
     def objectiveFunction(self, aParameterSet, aSavePopulationFlag = True):
 
@@ -69,13 +108,11 @@ class TomographyGlobalFitness(ObjectiveFunction):
 
         sinogram_data = radon(image_data, theta=self.theta, circle=False)
 
-        error_term = math.sqrt(np.square(sinogram_data.flatten() - self.projections.flatten()).mean());
+
+        error_term = self.image_metrics_function(self.projections, sinogram_data);
         fitness = error_term;
 
-        image_prewitt_h = filters.prewitt_h(image_data);
-        image_prewitt_v = filters.prewitt_v(image_data);
-
-        tv_norm = 0.5 * getTV(image_data);
+        tv_norm = 0.5 * IM.getTV(image_data);
 
         if self.k > 0.0:
 
@@ -89,7 +126,7 @@ class TomographyGlobalFitness(ObjectiveFunction):
             self.global_fitness_set.append(fitness);
             self.global_error_term_set.append(error_term);
             self.global_regularisation_term_set.append(tv_norm);
-            self.zncc_set.append(getNCC(self.image, self.population_image_data));
+            self.zncc_set.append(IM.getNCC(self.image, self.population_image_data));
 
         return fitness;
 
@@ -121,13 +158,13 @@ class TomographyGlobalFitness(ObjectiveFunction):
             interpolation="cubic",
             circle=False)
 
-        self.FBP_zncc = getNCC(self.image, self.fbp_reconstruction);
+        self.FBP_zncc = IM.getNCC(self.image, self.fbp_reconstruction);
 
         # Perform the SART reconstruction
-        self.sart_reconstruction = cropCenter(iradon_sart(self.projections,
+        self.sart_reconstruction = IM.cropCenter(iradon_sart(self.projections,
             theta=self.theta, relaxation=0.05), self.image.shape[1], self.image.shape[0]);
 
-        self.SART_zncc = getNCC(self.image, self.sart_reconstruction);
+        self.SART_zncc = IM.getNCC(self.image, self.sart_reconstruction);
 
     def plot(self, fig, ax, aGenerationID, aTotalNumberOfGenerations):
 
@@ -185,7 +222,7 @@ class TomographyGlobalFitness(ObjectiveFunction):
             ax[1, 1].imshow(self.projections)
 
             # Plot the FBP reconstruction
-            ax[2, 0].set_title("FBP reconstruction\nfrom sinogram")
+            ax[2, 0].set_title("FBP reconstruction")
             ax[2, 0].imshow(self.fbp_reconstruction, cmap=plt.cm.Greys_r)
 
             # Plot the FBP reconstruction error map
@@ -193,7 +230,7 @@ class TomographyGlobalFitness(ObjectiveFunction):
             ax[2, 1].imshow(self.fbp_reconstruction - self.image, cmap=plt.cm.Greys_r)
 
             # Plot the SART reconstruction
-            ax[3, 0].set_title("SART reconstruction\nfrom sinogram")
+            ax[3, 0].set_title("SART reconstruction")
             ax[3, 0].imshow(self.sart_reconstruction, cmap=plt.cm.Greys_r)
 
             # Plot the SART reconstruction error map
@@ -211,7 +248,7 @@ class TomographyGlobalFitness(ObjectiveFunction):
             ax[4, 1].set_ylabel("Intensity");
 
             # Plot the Evolutionary reconstruction
-            ax[5, 0].set_title("Evolutionary reconstruction\nfrom sinogram")
+            ax[5, 0].set_title("Evolutionary reconstruction")
 
             # Plot the Evolutionary reconstruction error map
             ax[5, 1].set_title("Evolutionary reconstruction error")

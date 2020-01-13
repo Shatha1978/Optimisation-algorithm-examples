@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
+import sys, os
 import argparse
 
 import math
 
 import numpy as np
+
+import logging;
 
 # Add a progress bar
 from progress.bar import IncrementalBar
@@ -32,7 +35,7 @@ from NewBloodOperator         import *
 from TomographyGlobalFitness import TomographyGlobalFitness
 from TomographyLocalFitness  import TomographyLocalFitness
 
-from ImageMetrics import *;
+import ImageMetrics as IM;
 
 import matplotlib
 #matplotlib.use('PS')
@@ -41,8 +44,12 @@ matplotlib.use('QT5Agg')
 NoneType = type(None);
 
 
+
 # Check the command line arguments
 def checkCommandLineArguments():
+    global logging;
+    global args;
+
     parser = argparse.ArgumentParser(description='Evolutionary reconstruction.')
 
     parser.add_argument('--input', help='Input image (groundtruth)',      nargs=1, type=str, required=True);
@@ -85,13 +92,30 @@ def checkCommandLineArguments():
 
     parser.add_argument('--logging', help='File name of the log file', nargs=1, type=str, required=False);
 
+    parser.add_argument('--objective', help='Objective function: Valid values are: MAE, MSE, RMSE, NRMSE_euclidean, NRMSE_mean, NRMSE_min_max, cosine_similarity, mean_relative_error, max_relative_error, SSIM, PSNR, or ZNCC', nargs=1, type=str, required=True);
+
     args = parser.parse_args();
+
+    # Set the logger if needed
+    if not isinstance(args.logging, NoneType):
+        logging.basicConfig(filename=args.logging[0],
+                            level=logging.DEBUG,
+                            filemode='w',
+                            format='%(asctime)s, %(name)s - %(levelname)s - %(message)s',
+                            datefmt='%d-%b-%y %H:%M:%S')
+
+        logging.debug(args)
 
     if args.steady_state and args.generational:
         raise ValueError('Options --steady_state and --generational can\'t be used at the same time. Choose one implementation.')
 
     if not args.steady_state and not args.generational:
         raise ValueError('Argument --steady_state or --generational should be used. Choose an implementation.')
+
+    if not isinstance(args.objective, NoneType):
+
+        if args.objective[0] not in IM.MINIMISATION and args.objective[0] not in IM.MAXIMISATION:
+            raise ValueError('Argument --objective "%s" is not valid.' % args.objective[0])
 
     return args;
 
@@ -185,39 +209,39 @@ def logStatistics(aNumberOfIndividuals):
     if not isinstance(args.logging, NoneType):
         if g_first_log:
             g_first_log = False;
-            logging.info("generation,event,number_of_emission_points,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,mean_relative_error_sinogram,max_relative_error_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,mean_relative_error_reconstruction,max_relative_error_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction");
+            logging.info("generation,event,number_of_emission_points,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction");
 
         ref  =  global_fitness_function.projections;
         test = global_fitness_function.population_sinogram_data;
-        MAE_sinogram                 = getMAE(ref, test);
-        MSE_sinogram                 = getMSE(ref, test);
-        RMSE_sinogram                = getRMSE(ref, test);
-        NRMSE_euclidean_sinogram     = getNRMSE_euclidean(ref, test);
-        NRMSE_mean_sinogram          = getNRMSE_mean(ref, test);
-        NRMSE_min_max_sinogram       = getNRMSE_minMax(ref, test);
-        cosine_similarity_sinogram   = getCosineSimilarity(ref, test);
-        #mean_relative_error_sinogram = getMeanRelativeError(ref, test);
-        #max_relative_error_sinogram  = getMaxRelativeError(ref, test);
-        SSIM_sinogram                = getSSIM(ref, test);
-        PSNR_sinogram                = getPSNR(ref, test);
-        ZNCC_sinogram                = getNCC(ref, test);
-        TV_sinogram                  = getTV(test);
+        MAE_sinogram                 = IM.getMAE(ref, test);
+        MSE_sinogram                 = IM.getMSE(ref, test);
+        RMSE_sinogram                = IM.getRMSE(ref, test);
+        NRMSE_euclidean_sinogram     = IM.getNRMSE_euclidean(ref, test);
+        NRMSE_mean_sinogram          = IM.getNRMSE_mean(ref, test);
+        NRMSE_min_max_sinogram       = IM.getNRMSE_minMax(ref, test);
+        cosine_similarity_sinogram   = IM.getCosineSimilarity(ref, test);
+        #mean_relative_error_sinogram = IM.getMeanRelativeError(ref, test);
+        #max_relative_error_sinogram  = IM.getMaxRelativeError(ref, test);
+        SSIM_sinogram                = IM.getSSIM(ref, test);
+        PSNR_sinogram                = IM.getPSNR(ref, test);
+        ZNCC_sinogram                = IM.getNCC(ref, test);
+        TV_sinogram                  = IM.getTV(test);
 
         ref  =  global_fitness_function.image;
         test = global_fitness_function.population_image_data;
-        MAE_reconstruction                 = getMAE(ref, test);
-        MSE_reconstruction                 = getMSE(ref, test);
-        RMSE_reconstruction                = getRMSE(ref, test);
-        NRMSE_euclidean_reconstruction     = getNRMSE_euclidean(ref, test);
-        NRMSE_mean_reconstruction          = getNRMSE_mean(ref, test);
-        NRMSE_min_max_reconstruction       = getNRMSE_minMax(ref, test);
-        cosine_similarity_reconstruction   = getCosineSimilarity(ref, test);
-        #mean_relative_error_reconstruction = getMeanRelativeError(ref, test);
-        #max_relative_error_reconstruction  = getMaxRelativeError(ref, test);
-        SSIM_reconstruction                = getSSIM(ref, test);
-        PSNR_reconstruction                = getPSNR(ref, test);
-        ZNCC_reconstruction                = getNCC(ref, test);
-        TV_reconstruction                  = getTV(test);
+        MAE_reconstruction                 = IM.getMAE(ref, test);
+        MSE_reconstruction                 = IM.getMSE(ref, test);
+        RMSE_reconstruction                = IM.getRMSE(ref, test);
+        NRMSE_euclidean_reconstruction     = IM.getNRMSE_euclidean(ref, test);
+        NRMSE_mean_reconstruction          = IM.getNRMSE_mean(ref, test);
+        NRMSE_min_max_reconstruction       = IM.getNRMSE_minMax(ref, test);
+        cosine_similarity_reconstruction   = IM.getCosineSimilarity(ref, test);
+        #mean_relative_error_reconstruction = IM.getMeanRelativeError(ref, test);
+        #max_relative_error_reconstruction  = IM.getMaxRelativeError(ref, test);
+        SSIM_reconstruction                = IM.getSSIM(ref, test);
+        PSNR_reconstruction                = IM.getPSNR(ref, test);
+        ZNCC_reconstruction                = IM.getNCC(ref, test);
+        TV_reconstruction                  = IM.getTV(test);
 
         #logging.info("%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_generation,g_log_event,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,mean_relative_error_sinogram,max_relative_error_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,mean_relative_error_reconstruction,max_relative_error_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction));
 
@@ -225,27 +249,23 @@ def logStatistics(aNumberOfIndividuals):
 
         g_log_event="";
 
+
+args = None;
+
 try:
+
     args = checkCommandLineArguments()
-
-
-    # Set the logger if needed
-    if not isinstance(args.logging, NoneType):
-        import logging
-        logging.basicConfig(filename=args.logging[0],
-                            level=logging.DEBUG,
-                            filemode='w',
-                            format='%(asctime)s, %(name)s - %(levelname)s - %(message)s',
-                            datefmt='%d-%b-%y %H:%M:%S')
-
-
-        logging.debug(args)
 
     # Create test problem
     number_of_angles = args.angles[0];
     peak_value = args.peak[0];
     k = args.initial_lambda[0];
-    global_fitness_function = TomographyGlobalFitness(args.input[0], number_of_angles, peak_value, k);
+    global_fitness_function = TomographyGlobalFitness(args.input[0],
+                                                      args.objective[0],
+                                                      number_of_angles,
+                                                      peak_value,
+                                                      k);
+
     local_fitness_function = TomographyLocalFitness(global_fitness_function);
 
 
@@ -533,7 +553,8 @@ try:
         if plt.fignum_exists(fig.number) and plt.get_fignums():
 
             # Update the main window
-            global_fitness_function.plot(fig, ax, i += 1, number_of_generation)
+            global_fitness_function.plot(fig, ax, i, number_of_generation);
+            i += 1;
             plt.pause(5.00)
             #plt.savefig('test.eps', format='eps', bbox_inches='tight', pad_inches=1.0, dpi=600)
 
@@ -550,7 +571,7 @@ try:
         imsave(args.output_without_bad_flies[0] + '.png', global_fitness_function.population_image_data);
 
         # Save an ASCII file
-        np.savetxt(args.output_without_bad_flies[0] + '.txt', global_fitness_function.population_image_data)
+        np.savetxt(args.output_without_bad_flies[0] + '.txt', global_fitness_function.population_image_data);
 
     # Show the visualisation
     if args.visualisation:
@@ -559,11 +580,17 @@ try:
         if plt.fignum_exists(fig.number) and plt.get_fignums():
 
             # Update the main window
-            global_fitness_function.plot(fig, ax, i += 1, number_of_generation)
+            global_fitness_function.plot(fig, ax, i, number_of_generation);
+            i += 1;
 
         # Show all the windows
         plt.show();
-        
+
 except Exception as e:
     if not isinstance(args.logging, NoneType):
         logging.critical("Exception occurred", exc_info=True)
+    else:
+        print(e)
+    sys.exit(os.EX_SOFTWARE)
+
+sys.exit(os.EX_OK) # code 0, all ok
