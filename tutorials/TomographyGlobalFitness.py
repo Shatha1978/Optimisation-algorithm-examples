@@ -176,6 +176,35 @@ class TomographyGlobalFitness(ObjectiveFunction):
 
         self.SART_zncc = IM.getNCC(self.image, self.sart_reconstruction);
 
+    def saveInputImages(self, aFilePrefix = ""):
+        prefix = aFilePrefix;
+
+        # Groundtruth
+
+        # Save a PNG file
+        imsave(prefix + '-groundtruth.png', self.image);
+
+        # Save an ASCII file
+        np.savetxt(prefix + '-groundtruth.txt', self.image);
+
+        # Noisy
+
+        # Save a PNG file
+        imsave(prefix + '-noisy.png', self.noisy);
+
+        # Save an ASCII file
+        np.savetxt(prefix + '-noisy.txt', self.noisy);
+
+        # Sinogram
+
+        # Save a PNG file
+        imsave(prefix + '-sinogram.png', self.projections);
+
+        # Save an ASCII file
+        np.savetxt(prefix + '-sinogram.txt', self.projections);
+
+
+
     def plot(self, fig, ax, aGenerationID, aTotalNumberOfGenerations):
 
         window_title = "Generation " + str(aGenerationID) + "/" + str(aTotalNumberOfGenerations) + " - Global fitness: " + str(self.global_fitness_set[-1]);

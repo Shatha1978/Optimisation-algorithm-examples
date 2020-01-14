@@ -58,6 +58,8 @@ def checkCommandLineArguments():
 
     parser.add_argument('--output_without_bad_flies', help='Reconstructed image without the bad flies',      nargs=1, type=str, required=False);
 
+    parser.add_argument('--save_input_images', help='Where to save the input images (groundtruth with and without noise, and the sinogram)',      nargs=1, type=str, required=False);
+
     parser.add_argument('--angles', help='Number of angles',      nargs=1, type=int, required=True);
 
     parser.add_argument('--peak', help='Peak value for the Poisson noise',      nargs=1, type=float, required=False);
@@ -269,6 +271,9 @@ try:
                                                       number_of_angles,
                                                       peak_value,
                                                       k);
+
+    if not isinstance(args.save_input_images, NoneType):
+        global_fitness_function.saveInputImages(args.save_input_images[0]);
 
     local_fitness_function = TomographyLocalFitness(global_fitness_function);
 
