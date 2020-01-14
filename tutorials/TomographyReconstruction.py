@@ -529,10 +529,16 @@ try:
     if not isinstance(args.output_with_bad_flies, NoneType):
 
         # Save a PNG file
-        imsave(args.output_with_bad_flies[0] + '.png', global_fitness_function.population_image_data);
+        imsave(args.output_with_bad_flies[0] + '-reconstruction.png', global_fitness_function.population_image_data);
 
         # Save an ASCII file
-        np.savetxt(args.output_with_bad_flies[0] + '.txt', global_fitness_function.population_image_data);
+        np.savetxt(args.output_with_bad_flies[0] + '-reconstruction.txt', global_fitness_function.population_image_data);
+
+        # Save a PNG file
+        imsave(args.output_with_bad_flies[0] + '-projections.png', global_fitness_function.population_sinogram_data);
+
+        # Save an ASCII file
+        np.savetxt(args.output_with_bad_flies[0] + '-projections.txt', global_fitness_function.population_sinogram_data);
 
         # Log message
         if not isinstance(args.logging, NoneType):
@@ -580,10 +586,16 @@ try:
     if not isinstance(args.output_without_bad_flies, NoneType):
 
         # Save a PNG file
-        imsave(args.output_without_bad_flies[0] + '.png', global_fitness_function.population_image_data);
+        imsave(args.output_without_bad_flies[0] + '-reconstruction.png', global_fitness_function.population_image_data);
 
         # Save an ASCII file
-        np.savetxt(args.output_without_bad_flies[0] + '.txt', global_fitness_function.population_image_data);
+        np.savetxt(args.output_without_bad_flies[0] + '-reconstruction.txt', global_fitness_function.population_image_data);
+
+        # Save a PNG file
+        imsave(args.output_without_bad_flies[0] + '-projections.png', global_fitness_function.population_sinogram_data);
+
+        # Save an ASCII file
+        np.savetxt(args.output_without_bad_flies[0] + '-projections.txt', global_fitness_function.population_sinogram_data);
 
     # Show the visualisation
     if args.visualisation:
