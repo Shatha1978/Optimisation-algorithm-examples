@@ -60,9 +60,11 @@ def checkCommandLineArguments():
 
     parser.add_argument('--angles', help='Number of angles',      nargs=1, type=int, required=True);
 
-    parser.add_argument('--peak', help='Peak value for the Poisson noise',      nargs=1, type=float, required=True);
+    parser.add_argument('--peak', help='Peak value for the Poisson noise',      nargs=1, type=float, required=False);
 
     parser.add_argument('--selection', help='Selection operator (threshold, tournament or dual)',      nargs=1, type=str, required=True);
+
+    parser.add_argument('--initial_pop_size', help='Size of the initial population',      nargs=1, type=int, required=False);
 
     parser.add_argument('--tournament_size', help='Number of individuals involved in the tournament',      nargs=1, type=int, required=False, default=2);
 
@@ -258,7 +260,9 @@ try:
 
     # Create test problem
     number_of_angles = args.angles[0];
-    peak_value = args.peak[0];
+    peak_value = -1;
+    if not isinstance(args.peak, NoneType):
+        args.peak[0];
     k = args.initial_lambda[0];
     global_fitness_function = TomographyGlobalFitness(args.input[0],
                                                       args.objective[0],
@@ -272,6 +276,9 @@ try:
     # Parameters for EA
     number_of_individuals            = int(round( global_fitness_function.image.sum() / (256 * 2)));
     number_of_generation             = args.generations[0];
+
+    if not isinstance(args.initial_pop_size, NoneType):
+        number_of_individuals = args.initial_pop_size[0];
 
     # Log messages
     if not isinstance(args.logging, NoneType):
