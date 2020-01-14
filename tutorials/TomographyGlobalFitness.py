@@ -14,6 +14,8 @@ from sklearn import preprocessing
 from ObjectiveFunction import *
 import ImageMetrics as IM;
 
+import os.path # For file extension
+
 
 NoneType = type(None);
 
@@ -134,7 +136,11 @@ class TomographyGlobalFitness(ObjectiveFunction):
     def loadImageData(self, anInputImage, aNumberOfAngles, aPeakValue):
         # Load the phantom (considered as unknown)
         data_dir = '.';
-        image = imread(anInputImage, as_gray=True)
+
+        if os.path.splitext(anInputImage)[1] == ".txt":
+            image = np.loadtxt(anInputImage);
+        else:
+            image = imread(anInputImage, as_gray=True)
 
         # Zoom out
         image = zoom(image, 0.5)

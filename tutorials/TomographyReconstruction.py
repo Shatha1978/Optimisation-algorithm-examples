@@ -262,7 +262,7 @@ try:
     number_of_angles = args.angles[0];
     peak_value = -1;
     if not isinstance(args.peak, NoneType):
-        args.peak[0];
+        peak_value = args.peak[0];
     k = args.initial_lambda[0];
     global_fitness_function = TomographyGlobalFitness(args.input[0],
                                                       args.objective[0],
