@@ -48,16 +48,18 @@ class TournamentSelection(SelectionOperator):
 
         # Store the fitness value of N(=self.tournament_size) individuals
         fitness_set = [];
+        index_set = [];
         while len(fitness_set) < self.tournament_size:
             index = self.system_random.randint(0, max_ind)
-            fitness = anIndividualSet[index].getObjective()
+            fitness = anIndividualSet[index].computeObjectiveFunction()
             fitness_set.append(fitness)
+            index_set.append(index)
 
         # Find the best individual depending on the fitness
         # (maxiumisation)
         # good individual
         if aFlag == True:
-            return np.argmax(fitness_set)
+            return index_set[np.argmax(fitness_set)]
         # bad individual
         else:
-            return np.argmin(fitness_set)
+            return index_set[np.argmin(fitness_set)]
