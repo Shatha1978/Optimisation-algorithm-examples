@@ -24,7 +24,7 @@ class ThresholdSelection(SelectionOperator):
         self.threshold = aThreshold;
         self.alternative_selection_operator = anAlternativeSelectionOperator;
         self.max_iteration = aMaxIteration;
-
+        self.max_iteration_reached_counter = 0;
         # Get a SystemRandom instance out of random package
         self.system_random = random.SystemRandom();
 
@@ -54,13 +54,16 @@ class ThresholdSelection(SelectionOperator):
             if aFlag == True:
                 # The fitness is greater than the threshold, it's a good individual
                 if fitness > self.threshold:
+                    self.max_iteration_reached_counter = 0;
                     return selected_index;
             # Try to find a bad individual (candidate for death)
             else:
                 # The fitness is lower than or equal to the threshold, it's a bad individual
                 if fitness <= self.threshold:
+                    self.max_iteration_reached_counter = 0;
                     return selected_index;
 
         # The threshold selection has failed self.max_iteration times,
         # use self.alternative_selection_operator instead
+        self.max_iteration_reached_counter += 1;
         return self.alternative_selection_operator.__select__(anIndividualSet, aFlag);
