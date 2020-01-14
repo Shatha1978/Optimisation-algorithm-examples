@@ -139,11 +139,15 @@ class TomographyGlobalFitness(ObjectiveFunction):
         # Zoom out
         image = zoom(image, 0.5)
 
-        # Add some noise using the Poisson distribution
-        self.noisy = np.random.poisson(image / 255.0 * aPeakValue) / aPeakValue * 255  # noisy image
-
         # Convert from uint8 to float
         self.image = image.astype(np.float)
+
+        # Add some noise using the Poisson distribution
+        if aPeakValue > 0.0:
+            self.noisy = np.random.poisson(image / 255.0 * aPeakValue) /   aPeakValue * 255  # noisy image
+        # Do not add noise
+        else:
+            self.noisy = self.image;
 
         # Compute the Radon transform
         self.theta = np.linspace(0., 180., aNumberOfAngles, endpoint=False)
