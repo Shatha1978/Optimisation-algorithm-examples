@@ -44,6 +44,9 @@ class EvolutionaryAlgorithm(Optimiser):
         while (self.getNumberOfIndividuals() < aNumberOfIndividuals):
             self.current_solution_set.append(IND.Individual(self.objective_function, self.objective_function.initialRandomGuess()))
 
+        # Number of new individual created
+        self.number_created_children = self.getNumberOfIndividuals();
+
         # Compute the global fitness
         self.global_fitness = None;
         self.global_fitness_function = aGlobalFitnessFunction;
@@ -60,13 +63,13 @@ class EvolutionaryAlgorithm(Optimiser):
                 self.global_fitness = -float('inf');
 
             # Evaluate the global fitness
-            self.evaluateGlobalFitness();
+            self.evaluateGlobalFitness(True);
 
         # Store the best individual
         else:
             self.saveBestIndividual();
 
-    def evaluateGlobalFitness(self):
+    def evaluateGlobalFitness(self, anUpdateIndividualLocalFitnessFlag):
 
         if self.global_fitness_function:
 
@@ -84,6 +87,11 @@ class EvolutionaryAlgorithm(Optimiser):
 
             # Save the new global fitness
             self.global_fitness = temp;
+
+            if anUpdateIndividualLocalFitnessFlag:
+                # Compute the local fitnessof every individual
+                for i in range(self.getNumberOfIndividuals()):
+                    self.current_solution_set[i].computeObjectiveFunction();
 
         return self.global_fitness;
 
@@ -180,21 +188,41 @@ class EvolutionaryAlgorithm(Optimiser):
                         if (chosen_operator <= accummulator):
                             offspring_population.append(genetic_opterator.apply(self));
 
+            self.number_created_children += 1;
+
         # Replace the parents by the offspring
         self.current_solution_set = offspring_population;
-
-        # Compute the global fitness
-        self.evaluateGlobalFitness();
 
         # Compute the fitness value of all the individual
         # And keep track of who is the best individual
         # Store the best individual
         if self.global_fitness_function == 0 or self.global_fitness_function == None:
             self.saveBestIndividual();
+        else:
+            # Compute the global fitness
+            self.evaluateGlobalFitness(True);
+
 
         # Return the best individual
         return self.best_solution;
 
+    def mitosis(self, aMutationOperator, anUpdateIndividualLocalFitnessFlag):
+
+        # Duplicate the population
+        for i in range(self.getNumberOfIndividuals()):
+            self.current_solution_set.append(aMutationOperator.mutate(IND.Individual(self.objective_function, self.current_solution_set[i].parameter_set)));
+
+            self.number_created_children += 1;
+
+        # Update the global and local fitness values
+        if self.global_fitness_function != 0 and self.global_fitness_function != None:
+
+            # Evaluate the global fitness
+            self.evaluateGlobalFitness(anUpdateIndividualLocalFitnessFlag);
+
+        # Store the best individual
+        else:
+            self.saveBestIndividual();
 
     def runSteadyState(self):
 
@@ -241,7 +269,10 @@ class EvolutionaryAlgorithm(Optimiser):
                             added_a_new_child = True;
 
                             # Compute the global fitness
-                            self.evaluateGlobalFitness();
+                            self.evaluateGlobalFitness(False);
+
+            self.number_created_children += 1;
+
 
         # Not using Parisian evolution
         if self.global_fitness_function == 0 or self.global_fitness_function == None:
