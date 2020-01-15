@@ -33,7 +33,6 @@ from GaussianMutationOperator import *
 from NewBloodOperator         import *
 
 from TomographyGlobalFitness import TomographyGlobalFitness
-from TomographyLocalFitness  import TomographyLocalFitness
 
 import ImageMetrics as IM;
 
@@ -54,9 +53,7 @@ def checkCommandLineArguments():
 
     parser.add_argument('--input', help='Input image (groundtruth)',      nargs=1, type=str, required=True);
 
-    parser.add_argument('--output_with_bad_flies', help='Reconstructed image with the bad flies',      nargs=1, type=str, required=False);
-
-    parser.add_argument('--output_without_bad_flies', help='Reconstructed image without the bad flies',      nargs=1, type=str, required=False);
+    parser.add_argument('--output', help='Reconstructed image',      nargs=1, type=str, required=False);
 
     parser.add_argument('--save_input_images', help='Where to save the input images (groundtruth with and without noise, and the sinogram)',      nargs=1, type=str, required=False);
 
@@ -64,19 +61,15 @@ def checkCommandLineArguments():
 
     parser.add_argument('--peak', help='Peak value for the Poisson noise',      nargs=1, type=float, required=False);
 
-    parser.add_argument('--selection', help='Selection operator (threshold, tournament or dual)',      nargs=1, type=str, required=True);
+    parser.add_argument('--selection', help='Selection operator (ranking, roulette, tournament or dual)',      nargs=1, type=str, required=True);
 
-    parser.add_argument('--initial_pop_size', help='Size of the initial population',      nargs=1, type=int, required=False);
+    parser.add_argument('--pop_size', help='Size of the population',      nargs=1, type=int, required=True);
+
+    parser.add_argument('--number_of_emission_points', help='Number of emission points',      nargs=1, type=int, required=False);
 
     parser.add_argument('--tournament_size', help='Number of individuals involved in the tournament',      nargs=1, type=int, required=False, default=2);
 
     parser.add_argument('--generations', help='Number of generations',      nargs=1, type=int, required=True);
-
-    parser.add_argument('--max_pop_size', help='Maximum number of individuals',      nargs=1, type=int, required=False);
-
-    parser.add_argument('--steady_state', help='Realtime visualisation', action="store_true");
-
-    parser.add_argument('--generational', help='Realtime visualisation', action="store_true");
 
     parser.add_argument('--visualisation', help='Realtime visualisation', action="store_true");
 
@@ -89,10 +82,6 @@ def checkCommandLineArguments():
     parser.add_argument('--initial_mutation_variance', help='Mutation variance at the start of the optimisation', nargs=1, type=float, required=True);
 
     parser.add_argument('--final_mutation_variance', help='Mutation variance at the end of the optimisation', nargs=1, type=float, required=True);
-
-    parser.add_argument('--initial_new_blood_probability', help='Probability of the new blood operator at the start of the optimisation', nargs=1, type=float, required=True);
-
-    parser.add_argument('--final_new_blood_probability', help='Probability of the new blood operator at the end of the optimisation', nargs=1, type=float, required=True);
 
     parser.add_argument('--logging', help='File name of the log file', nargs=1, type=str, required=False);
 
@@ -110,66 +99,12 @@ def checkCommandLineArguments():
 
         logging.debug(args)
 
-    if args.steady_state and args.generational:
-        raise ValueError('Options --steady_state and --generational can\'t be used at the same time. Choose one implementation.')
-
-    if not args.steady_state and not args.generational:
-        raise ValueError('Argument --steady_state or --generational should be used. Choose an implementation.')
-
     if not isinstance(args.objective, NoneType):
 
         if args.objective[0] not in IM.MINIMISATION and args.objective[0] not in IM.MAXIMISATION:
             raise ValueError('Argument --objective "%s" is not valid.' % args.objective[0])
 
     return args;
-
-
-def filterBadIndividualsOut():
-    number_of_good_individuals = 0;
-    number_of_bad_individuals = 0;
-    good_individual_set = [];
-
-    if args.generational:
-        for individual in optimiser.current_solution_set:
-            if individual.getObjective() > 0:
-                number_of_good_individuals += 1;
-                for parameter in individual.parameter_set:
-                    good_individual_set.append(parameter);
-            else:
-                number_of_bad_individuals += 1;
-
-    elif args.steady_state:
-
-        # Iteratively delete bad individuals
-        number_of_bad_individuals = 1;
-        while number_of_bad_individuals != 0:
-            good_individual_set = [];
-
-            number_of_bad_individuals = 0;
-            number_of_good_individuals = 0;
-
-            for i,j in zip(global_fitness_function.current_population[0::2], global_fitness_function.current_population[1::2]):
-
-                if number_of_bad_individuals == 0:
-                    local_fitness = local_fitness_function.objectiveFunction((i, j));
-
-                    if local_fitness < 0.0:
-                        number_of_bad_individuals += 1
-                    else:
-                        number_of_good_individuals += 1
-
-                        good_individual_set.append(i);
-                        good_individual_set.append(j);
-                else:
-                    good_individual_set.append(i);
-                    good_individual_set.append(j);
-
-            global_fitness_function.current_population = good_individual_set;
-            global_fitness_function.objectiveFunction(good_individual_set, True);
-
-    return number_of_good_individuals, \
-        number_of_bad_individuals, \
-        good_individual_set;
 
 
 class MyBar(IncrementalBar):
@@ -269,23 +204,18 @@ try:
     k = args.initial_lambda[0];
     global_fitness_function = TomographyGlobalFitness(args.input[0],
                                                       args.objective[0],
-                                                      2,
+                                                      args.number_of_emission_points[0],
                                                       number_of_angles,
                                                       peak_value,
                                                       k);
+    global_fitness_function.save_best_solution = True;
 
     if not isinstance(args.save_input_images, NoneType):
         global_fitness_function.saveInputImages(args.save_input_images[0]);
 
-    local_fitness_function = TomographyLocalFitness(global_fitness_function);
-
-
     # Parameters for EA
-    number_of_individuals            = int(round( global_fitness_function.image.sum() / (256 * 2)));
-    number_of_generation             = args.generations[0];
-
-    if not isinstance(args.initial_pop_size, NoneType):
-        number_of_individuals = args.initial_pop_size[0];
+    number_of_individuals = args.pop_size[0];
+    number_of_generation  = args.generations[0];
 
     # Log messages
     if not isinstance(args.logging, NoneType):
@@ -296,8 +226,8 @@ try:
 
 
     # Create the optimiser
-    optimiser = EvolutionaryAlgorithm(local_fitness_function,
-        number_of_individuals, global_fitness_function);
+    optimiser = EvolutionaryAlgorithm(global_fitness_function,
+        number_of_individuals);
 
     # Default tournament size
     tournament_size = 2;
@@ -314,29 +244,23 @@ try:
 
 
     # Set the selection operator
-    tournament_selection = TournamentSelection(tournament_size);
-
-    #optimiser.setSelectionOperator(RouletteWheelSelection());
-    #optimiser.setSelectionOperator(RankSelection());
-
-    # Set the selection operator
     if args.selection[0] == "dual" or args.selection[0] == "tournament":
-        optimiser.setSelectionOperator(tournament_selection);
-    elif args.selection[0] == "threshold":
-        optimiser.setSelectionOperator(ThresholdSelection(
-        0,
-        tournament_selection,
-        10));
+        optimiser.setSelectionOperator(TournamentSelection(tournament_size));
+    elif args.selection[0] == "ranking":
+        optimiser.setSelectionOperator(RankSelection());
+    elif args.selection[0] == "roulette":
+        optimiser.setSelectionOperator(RouletteWheelSelection());
     else:
         raise ValueError('Invalid selection operator "%s". Choose "threshold", "tournament" or "dual".' % (args.selection[0]))
 
     # Create the genetic operators
-    new_blood = NewBloodOperator(args.initial_new_blood_probability[0]);
-    gaussian_mutation = GaussianMutationOperator(1.0 - args.initial_new_blood_probability[0], args.initial_mutation_variance[0]);
+    gaussian_mutation = GaussianMutationOperator(0.3, args.initial_mutation_variance[0]);
+    blend_cross_over = BlendCrossoverOperator(0.6, gaussian_mutation);
 
     # Add the genetic operators to the EA
-    optimiser.addGeneticOperator(new_blood);
+    optimiser.addGeneticOperator(blend_cross_over);
     optimiser.addGeneticOperator(gaussian_mutation);
+    optimiser.addGeneticOperator(ElitismOperator(0.1));
 
 
     # Show the visualisation
@@ -374,65 +298,12 @@ try:
             # Stagnation has been reached
             if stagnation >= args.max_stagnation_counter[0]:
 
-                # Check the population size
-                current_population_size = optimiser.getNumberOfIndividuals();
-                target_population_size = 2 * current_population_size;
+                # Exit the for loop
+                run_evolutionary_loop = False;
 
-                run_mitosis = False;
-
-                # There is no max population size
-                if isinstance(args.max_pop_size, NoneType):
-                    run_mitosis = True;
-
-                # There is a max population size
-                else:
-                    # Has not reached the max population size
-                    if target_population_size <= args.max_pop_size[0]:
-                        run_mitosis = True;
-
-                    # Has reached the max population size
-                    else:
-                        # Exit the for loop
-                        run_evolutionary_loop = False;
-
-                        # Log message
-                        if not isinstance(args.logging, NoneType):
-                            logging.debug("Stopping criteria met. Population stagnation and max population size reached. The current population size is %i, the double is %i, which is higher than the threshold %i" % (current_population_size, target_population_size, args.max_pop_size[0]));
-
-                # Perform the mitosis
-                if run_mitosis:
-
-                    # Log message
-                    if not isinstance(args.logging, NoneType):
-                        logging.debug("Mitosis from %i individuals to %i" % (current_population_size, target_population_size));
-
-                    # Decrease the mutation variance
-                    old_mutation_variance = gaussian_mutation.mutation_variance;
-                    gaussian_mutation.mutation_variance /= 2;
-
-                    # Perform the mitosis and log the statistics
-                    optimiser.mitosis(gaussian_mutation, args.generational);
-                    g_log_event="Mitosis"; logStatistics(optimiser.getNumberOfIndividuals()); g_generation += 1;
-
-                    # Restore the mutation variance
-                    gaussian_mutation.mutation_variance = old_mutation_variance;
-
-                    # Reset the stagnation counter and
-                    # Update the best global fitness
-                    stagnation = 0;
-                    best_global_fitness = global_fitness_function.global_fitness_set[-1];
-
-
-                    # Increase the mitosis counter
-                    number_of_mitosis += 1;
-
-            # Update the operators' probability
-            # Decrease the new blood operator's probability
-            # Increase the mutation operator's probability
-            start = args.initial_new_blood_probability[0];
-            end   = args.final_new_blood_probability[0];
-            new_blood.probability = linearInterpolation(start, end, i, number_of_generation - 1);
-            gaussian_mutation.probability = 1.0 - new_blood.probability;
+                # Log message
+                if not isinstance(args.logging, NoneType):
+                    logging.debug("Stopping criteria met. Population stagnation.");
 
             # Decrease the mutation variance
             start = args.initial_mutation_variance[0];
@@ -444,17 +315,8 @@ try:
             end   = args.final_lambda[0];
             global_fitness_function.k = linearInterpolation(start, end, i, number_of_generation - 1);
 
-            # Do not update the local fitness of all the individuals
-            # in steady-state EA before running the evolutionary loop
-            if args.steady_state:
-                optimiser.evaluateGlobalFitness(False);
-                optimiser.runSteadyState();
-
-            # Update the local fitness of all the individuals in generational EA
-            # before running the evolutionary loop
-            elif args.generational:
-                optimiser.evaluateGlobalFitness(True);
-                optimiser.runIteration();
+            # Run the evolutionary loop
+            optimiser.runIteration();
 
             # Log the statistics
             g_log_event="Evolutionary loop"; logStatistics(optimiser.getNumberOfIndividuals()); g_generation += 1;
@@ -511,106 +373,37 @@ try:
     bar.finish();
 
 
-    # Log messages
-    if not isinstance(args.logging, NoneType):
-
-        logging.debug("Number of global fitness evaluation: %i", global_fitness_function.number_of_calls - local_fitness_function.number_of_calls)
-        logging.debug("Number of local fitness evaluation: %i", local_fitness_function.number_of_calls)
-
-
     # Show the visualisation
     if args.visualisation:
 
         # Create a new figure and show the reconstruction with the bad flies
         fig = plt.figure();
-        fig.canvas.set_window_title("Reconstruction with all the flies (bad and good)")
+        fig.canvas.set_window_title("Reconstruction")
         plt.imshow(global_fitness_function.population_image_data, cmap=plt.cm.Greys_r);
 
+        # Show all the windows
+        plt.show();
 
     # There is an output for the image with the bad flies
-    if not isinstance(args.output_with_bad_flies, NoneType):
+    if not isinstance(args.output, NoneType):
 
         # Save a PNG file
-        imsave(args.output_with_bad_flies[0] + '-reconstruction.png', global_fitness_function.population_image_data);
+        imsave(args.output[0] + '-reconstruction.png', global_fitness_function.population_image_data);
 
         # Save an ASCII file
-        np.savetxt(args.output_with_bad_flies[0] + '-reconstruction.txt', global_fitness_function.population_image_data);
+        np.savetxt(args.output[0] + '-reconstruction.txt', global_fitness_function.population_image_data);
 
         # Save a PNG file
-        imsave(args.output_with_bad_flies[0] + '-projections.png', global_fitness_function.population_sinogram_data);
+        imsave(args.output[0] + '-projections.png', global_fitness_function.population_sinogram_data);
 
         # Save an ASCII file
-        np.savetxt(args.output_with_bad_flies[0] + '-projections.txt', global_fitness_function.population_sinogram_data);
+        np.savetxt(args.output[0] + '-projections.txt', global_fitness_function.population_sinogram_data);
 
         # Log message
         if not isinstance(args.logging, NoneType):
 
-            logging.debug("Global fitness before cleaning: %f", global_fitness_function.global_fitness_set[-1]);
+            logging.debug("Best global fitness: %f", global_fitness_function.global_fitness_set[-1]);
 
-
-    # Remove the bad flies
-    number_of_good_individuals, number_of_bad_individuals, good_individual_set = filterBadIndividualsOut();
-
-
-    # Update the global fitness
-    global_fitness_function.objectiveFunction(good_individual_set, True);
-
-    # Log the statistics
-    g_log_event = "remove bad flies"; logStatistics(number_of_good_individuals); g_generation += 1;
-
-    # Log messages
-    if not isinstance(args.logging, NoneType):
-
-        logging.debug("Total number of good individuals: %i", number_of_good_individuals);
-        logging.debug("Total number of bad individuals: %i", len(optimiser.current_solution_set) - number_of_good_individuals);
-        logging.debug("Global fitness after cleaning: %f", global_fitness_function.global_fitness_set[-1]);
-
-
-    # Show the visualisation
-    if args.visualisation:
-
-        # The main windows is still open (does not work with Tkinker backend)
-        if plt.fignum_exists(fig.number) and plt.get_fignums():
-
-            # Update the main window
-            global_fitness_function.plot(fig, ax, i, number_of_generation);
-            i += 1;
-            plt.pause(5.00)
-            #plt.savefig('test.eps', format='eps', bbox_inches='tight', pad_inches=1.0, dpi=600)
-
-        # Create a new figure and show the reconstruction without the bad flies
-        fig = plt.figure();
-        fig.canvas.set_window_title("Reconstruction without the bad flies")
-        plt.imshow(global_fitness_function.population_image_data, cmap=plt.cm.Greys_r);
-
-
-    # There is an output for the image without the bad flies
-    if not isinstance(args.output_without_bad_flies, NoneType):
-
-        # Save a PNG file
-        imsave(args.output_without_bad_flies[0] + '-reconstruction.png', global_fitness_function.population_image_data);
-
-        # Save an ASCII file
-        np.savetxt(args.output_without_bad_flies[0] + '-reconstruction.txt', global_fitness_function.population_image_data);
-
-        # Save a PNG file
-        imsave(args.output_without_bad_flies[0] + '-projections.png', global_fitness_function.population_sinogram_data);
-
-        # Save an ASCII file
-        np.savetxt(args.output_without_bad_flies[0] + '-projections.txt', global_fitness_function.population_sinogram_data);
-
-    # Show the visualisation
-    if args.visualisation:
-
-        # The main windows is still open (does not work with Tkinker backend)
-        if plt.fignum_exists(fig.number) and plt.get_fignums():
-
-            # Update the main window
-            global_fitness_function.plot(fig, ax, i, number_of_generation);
-            i += 1;
-
-        # Show all the windows
-        plt.show();
 
 except Exception as e:
     if not isinstance(args.logging, NoneType):

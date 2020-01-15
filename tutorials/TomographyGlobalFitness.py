@@ -24,7 +24,7 @@ def normalise(image):
     return (image - image.mean()) / image.std();
 
 class TomographyGlobalFitness(ObjectiveFunction):
-    def __init__(self, anInputImage, anObjective, aNumberOfAngles=180, aPeakValue = 100, k = -1):
+    def __init__(self, anInputImage, anObjective, aSearchSpaceDimension = 2, aNumberOfAngles=180, aPeakValue = 100, k = -1):
 
         self.loadImageData(anInputImage, aNumberOfAngles, aPeakValue);
 
@@ -40,11 +40,17 @@ class TomographyGlobalFitness(ObjectiveFunction):
         self.global_regularisation_term_set = [];
         self.zncc_set = [];
         self.k = k;
-        number_of_dimensions = 2;
         self.current_population = None;
         self.number_of_calls = 0;
+        self.save_best_solution = False;
 
-        if anObjective == "MAE":
+        if anObjective == "SAE":
+            type_of_optimisation = ObjectiveFunction.MINIMISATION
+            self.image_metrics_function = IM.getSAE;
+        elif anObjective == "SSE":
+            type_of_optimisation = ObjectiveFunction.MINIMISATION
+            self.image_metrics_function = IM.getSSE;
+        elif anObjective == "MAE":
             type_of_optimisation = ObjectiveFunction.MINIMISATION
             self.image_metrics_function = IM.getMAE;
         elif anObjective == "MSE":
@@ -84,10 +90,11 @@ class TomographyGlobalFitness(ObjectiveFunction):
             raise ValueError('Invalid objective function "%s".' % (anObjective));
 
         self.boundaries = [];
-        for _ in range(number_of_dimensions):
+        for _ in range(aSearchSpaceDimension):
+            self.boundaries.append([0, max(self.noisy.shape) - 1]);
             self.boundaries.append([0, max(self.noisy.shape) - 1]);
 
-        super().__init__(number_of_dimensions,
+        super().__init__(2 * aSearchSpaceDimension,
                          self.boundaries,
                          self.objectiveFunction,
                          type_of_optimisation);
@@ -122,13 +129,23 @@ class TomographyGlobalFitness(ObjectiveFunction):
             fitness += regularisation_term;
 
         if aSavePopulationFlag:
-            self.current_population = copy.deepcopy(aParameterSet);
-            self.population_image_data = image_data;
-            self.population_sinogram_data = sinogram_data;
-            self.global_fitness_set.append(fitness);
-            self.global_error_term_set.append(error_term);
-            self.global_regularisation_term_set.append(tv_norm);
-            self.zncc_set.append(IM.getNCC(self.image, self.population_image_data));
+
+            save_data = True;
+
+            if len(self.global_fitness_set) > 0 and self.save_best_solution:
+                if self.flag == ObjectiveFunction.MINIMISATION and self.global_fitness_set[-1] < fitness:
+                    save_data = False;
+                elif self.flag == ObjectiveFunction.MAXIMISATION and self.global_fitness_set[-1] > fitness:
+                    save_data = False;
+
+            if save_data:
+                self.current_population = copy.deepcopy(aParameterSet);
+                self.population_image_data = image_data;
+                self.population_sinogram_data = sinogram_data;
+                self.global_fitness_set.append(fitness);
+                self.global_error_term_set.append(error_term);
+                self.global_regularisation_term_set.append(tv_norm);
+                self.zncc_set.append(IM.getNCC(self.image, self.population_image_data));
 
         return fitness;
 
