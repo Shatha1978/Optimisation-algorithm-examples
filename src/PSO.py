@@ -1,5 +1,9 @@
+import Particle as PART
+
 from Optimiser import *
-from Particle import *
+
+NoneType = type(None);
+
 
 class PSO(Optimiser):
 
@@ -11,58 +15,59 @@ class PSO(Optimiser):
         self.full_name = "Particle Swarm Optimisation";
         self.short_name = "PSO";
 
-        # Save the best particle at each iteration
-        #self.best_solution_set = [];
-
-        # Add a particle
-        self.current_solution_set.append(Particle(self.objective_function.number_of_dimensions, self.objective_function.boundary_set, aCostFunction, self))
-
-        # Keep track of the best particle
-        best_particle_index = 0;
-
         # Add initial guess if any
-        if self.initial_guess != None:
-            self.current_solution_set.append(Particle(self.objective_function.number_of_dimensions, self.objective_function.boundary_set, aCostFunction, self, self.initial_guess));
+        if not isinstance(self.initial_guess, NoneType):
+            self.current_solution_set.append(PART.Particle(
+                self.objective_function,
+                self,
+                self.initial_guess));
 
-        # Create the particles
-        while len(self.current_solution_set) < aNumberOfParticles:
-            self.current_solution_set.append(Particle(self.objective_function.number_of_dimensions, self.objective_function.boundary_set, aCostFunction, self))
+        # Create the swarm
+        while (self.getNumberOfParticles() < aNumberOfParticles):
+            self.current_solution_set.append(PART.Particle(self.objective_function, self, self.objective_function.initialRandomGuess()));
 
-            # The new particle is better
-            # Minimisation
-            if self.current_solution_set[best_particle_index].cost > self.current_solution_set[-1].cost:
-                best_particle_index = len(self.current_solution_set) - 1;
+        # Number of new particles created
+        self.number_created_particles = self.getNumberOfParticles();
 
         # Store the best particle
-        #self.best_solution_set.append(copy.deepcopy(best_particle))
-        self.best_solution = self.current_solution_set[best_particle_index].copy();
+        self.best_solution = None;
+        self.saveBestParticle();
+
 
     def evaluate(self, aParameterSet):
         return self.objective_function.evaluate(aParameterSet, 1);
 
-    def runIteration(self):
+    def getNumberOfParticles(self):
+        return len(self.current_solution_set);
 
-        # Keep track of the best particle
-        best_cost = self.best_solution.cost;
-        best_particle_index = -1;
+    def saveBestParticle(self):
+        # Compute the objective value of all the particles
+        # And keep track of who is the best particles
+        best_particle_index = 0;
 
-        # For each partical
-        for i in range(len(self.current_solution_set)):
+        for i in range(self.getNumberOfParticles()):
 
-            # update the particales' positions and velocities
-            self.current_solution_set[i].update()
-
-            # The new particle is better
-            if best_cost > self.current_solution_set[i].cost:
-                best_cost = self.current_solution_set[i].cost
+            if (self.current_solution_set[best_particle_index].getObjective() > self.current_solution_set[i].getObjective()):
                 best_particle_index = i;
 
-        # The new particle is better
-        if best_particle_index != -1:
-            self.best_solution = self.current_solution_set[best_particle_index].copy();
+        if isinstance(self.best_solution, NoneType):
+            self.best_solution =  self.current_solution_set[best_particle_index].copy();
+        elif self.best_solution.getObjective() > self.current_solution_set[best_particle_index].getObjective():
+            self.best_solution =  self.current_solution_set[best_particle_index].copy();
 
+    def runIteration(self):
+
+        # For each particle
+        for particle in self.current_solution_set:
+
+            # Update the particle's position and velocity
+            particle.update();
+
+        # Update the swarm's best known position
+        self.saveBestParticle()
+
+        # Return the best individual
         return self.best_solution;
-        #return self.best_solution_set[-1];
 
 
 
