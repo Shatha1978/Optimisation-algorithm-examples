@@ -10,12 +10,11 @@ do
     rm -rf $OUTPUT_DIR
     mkdir $OUTPUT_DIR
 
-    PREFIX=$METRICS-$MODE-$SELECTION-no_mitosis
-
     for MODE in steady_state generational
     do
         for SELECTION in threshold tournament
         do
+            PREFIX=$METRICS-$MODE-$SELECTION-no_mitosis
 
             ./TomographyReconstruction.py \
                 --angles 25 \
