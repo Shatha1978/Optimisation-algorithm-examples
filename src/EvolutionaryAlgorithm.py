@@ -42,7 +42,7 @@ class EvolutionaryAlgorithm(Optimiser):
 
         # Create the population
         while (self.getNumberOfIndividuals() < aNumberOfIndividuals):
-            self.current_solution_set.append(IND.Individual(self.objective_function, self.objective_function.initialRandomGuess()))
+            self.current_solution_set.append(IND.Individual(self.objective_function, self.objective_function.initialRandomGuess()));
 
         # Number of new individual created
         self.number_created_children = self.getNumberOfIndividuals();
