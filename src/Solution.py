@@ -1,5 +1,9 @@
 import copy; # For deepcopy
 
+
+NoneType = type(None);
+
+
 class Solution:
 
     '''
@@ -54,11 +58,17 @@ class Solution:
             self.objective = 0;
 
         # Copy the parameters if any
-        if not isinstance(aParameterSet, (str, type(None))):
-            self.parameter_set = copy.deepcopy(aParameterSet);
+        if not isinstance(aParameterSet, NoneType):
+            if self.objective_function.number_of_dimensions == len(aParameterSet):
+                self.parameter_set = copy.deepcopy(aParameterSet);
 
-            if aComputeObjectiveFlag:
-                self.computeObjectiveFunction();
+        # Use a random guess
+        if len(self.parameter_set) == 0:
+            self.parameter_set = self.objective_function.initialRandomGuess();
+
+        # Compute the objective value
+        if aComputeObjectiveFlag:
+            self.computeObjectiveFunction();
 
     def copy(self):
         '''
