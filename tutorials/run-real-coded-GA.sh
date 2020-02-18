@@ -1,30 +1,26 @@
 #!/bin/sh
 rm -f reconstruction.log
 
-SELECTION=tournament
-SELECTION=threshold
-MODE=steady_state
-MODE=generational
 METRICS=SSE
 
 date
 for run in {1..15}
 do
 
-    OUTPUT_DIR=RUN-GA-$run
-    rm -rf $OUTPUT_DIR
-    mkdir $OUTPUT_DIR
-
     for SELECTION in tournament roulette ranking
     do
 
-        ./TomographyReconstruction1.py \
+        OUTPUT_DIR=RUN-GA-$SELECTION-$run
+        rm -rf $OUTPUT_DIR
+        mkdir $OUTPUT_DIR
+
+        ./TomographyReconstructionRCGA.py \
             --angles 25 \
             --save_input_images $OUTPUT_DIR/$METRICS-$SELECTION-$run \
             --output $OUTPUT_DIR/without_bad_flies-$METRICS-$SELECTION-$run \
             --peak 50 \
-            --generations 166 \
-            --pop_size 166 \
+            --generations 142 \
+            --pop_size 142 \
             --number_of_emission_points 1840 \
             --input derenzo-hot.png \
             --max_stagnation_counter 5 \
@@ -42,10 +38,6 @@ do
                 echo There was an error. Stop here.
                 exit
             fi
-
-            #grep "root - INFO, " $OUTPUT_DIR/reconstruction-$METRICS-$SELECTION-$run.log > $OUTPUT_DIR/reconstruction-$METRICS-$SELECTION-$run.csv
-
-            #clear;./parCoord.py reconstruction--$METRICS-$SELECTION.csv
     done
 done
 date
