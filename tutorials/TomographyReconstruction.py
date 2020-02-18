@@ -37,6 +37,9 @@ from TomographyLocalFitness  import TomographyLocalFitness
 
 import ImageMetrics as IM;
 
+# Import the circular list
+from CircularList import *
+
 import matplotlib
 #matplotlib.use('PS')
 matplotlib.use('QT5Agg')
@@ -123,6 +126,33 @@ def checkCommandLineArguments():
 
     return args;
 
+from scipy.stats import linregress
+
+def getGradient(X, Y):
+    gradient = 0;
+
+    if x_set.len() > 1:
+        #print(X.len(), Y.len())
+        temp_X = np.array(X.values());
+        temp_X = temp_X - temp_X.mean();
+
+        temp_Y = np.array(Y.values());
+        temp_Y = temp_Y - temp_Y.mean();
+
+        gradient = np.dot(temp_X, temp_Y) / \
+            np.square(temp_X).sum();
+
+        #slope, intercept, r_value, p_value, std_err = linregress(X.values(), Y.values());
+        #print("gradient", gradient)
+        #print("slope", slope)
+        #print("r_value", r_value)
+        #print("p_value", p_value)
+        #print("std_err", std_err)
+        #print()
+        #print()
+
+    return gradient;
+
 
 def filterBadIndividualsOut():
     number_of_good_individuals = 0;
@@ -202,6 +232,26 @@ def linearInterpolation(start, end, i, j):
 g_first_log = True;
 g_log_event = "";
 g_generation = 0;
+x_set  = CircularList(5);
+global_fitness_set  = CircularList(5);
+TV_set = CircularList(5);
+
+def addToFitnessCircularList():
+    global x_set, global_fitness_set, TV_set
+
+    add_to_list = False;
+
+    if len(global_fitness_function.global_fitness_set) > 0:
+        if not isinstance(x_set.last_element, NoneType):
+            if x_set.last_element != optimiser.number_created_children:
+                add_to_list = True;
+        else:
+            add_to_list = True;
+
+    if add_to_list:
+        x_set.append(optimiser.number_created_children);
+        global_fitness_set.append(global_fitness_function.global_fitness_set[-1]);
+        TV_set.append(global_fitness_function.global_regularisation_term_set[-1]);
 
 def logStatistics(aNumberOfIndividuals):
 
@@ -210,11 +260,13 @@ def logStatistics(aNumberOfIndividuals):
     global g_log_event;
     global g_generation;
     global optimiser;
+    global x_set, global_fitness_set, TV_set;
+    global last_proportion_of_good_flies;
 
     if not isinstance(args.logging, NoneType):
         if g_first_log:
             g_first_log = False;
-            logging.info("generation,new_individual_counter,event,number_of_emission_points,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction");
+            logging.info("generation,new_individual_counter,event,number_of_emission_points,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction,circular_list_mean,circular_list_std,max_iteration_reached_counter,gradient_global_fitness,gradient_TV,good_flies,bad_flies");
 
         ref  =  global_fitness_function.projections;
         test = global_fitness_function.population_sinogram_data;
@@ -248,9 +300,12 @@ def logStatistics(aNumberOfIndividuals):
         ZNCC_reconstruction                = IM.getNCC(ref, test);
         TV_reconstruction                  = IM.getTV(test);
 
-        #logging.info("%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_generation,g_log_event,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,mean_relative_error_sinogram,max_relative_error_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,mean_relative_error_reconstruction,max_relative_error_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction));
 
-        logging.info("%i,%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_generation,optimiser.number_created_children,g_log_event,aNumberOfIndividuals,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction));
+        #logging.info("%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_generation,g_log_event,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,mean_relative_error_sinogram,max_relative_error_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,mean_relative_error_reconstruction,max_relative_error_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction));
+        gradient_global_fitness = getGradient(x_set, global_fitness_set);
+        gradient_TV             = getGradient(x_set, TV_set);
+
+        logging.info("%i,%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_generation,optimiser.number_created_children,g_log_event,aNumberOfIndividuals,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction,selection_operator.circular_list.mean(),selection_operator.circular_list.std(),selection_operator.max_iteration_reached_counter / optimiser.getNumberOfIndividuals(),gradient_global_fitness,gradient_TV,last_proportion_of_good_flies,1-last_proportion_of_good_flies));
 
         g_log_event="";
 
@@ -320,15 +375,18 @@ try:
     #optimiser.setSelectionOperator(RankSelection());
 
     # Set the selection operator
+    selection_operator = None;
     if args.selection[0] == "dual" or args.selection[0] == "tournament":
-        optimiser.setSelectionOperator(tournament_selection);
+        selection_operator = tournament_selection;
     elif args.selection[0] == "threshold":
-        optimiser.setSelectionOperator(ThresholdSelection(
+        selection_operator = ThresholdSelection(
         0,
         tournament_selection,
-        10));
+        10);
     else:
         raise ValueError('Invalid selection operator "%s". Choose "threshold", "tournament" or "dual".' % (args.selection[0]))
+
+    optimiser.setSelectionOperator(selection_operator);
 
     # Create the genetic operators
     new_blood = NewBloodOperator(args.initial_new_blood_probability[0]);
@@ -364,15 +422,103 @@ try:
     run_evolutionary_loop = True;
 
     # Log the statistics
+    last_proportion_of_good_flies = 0;
     g_log_event="Random initial population"; logStatistics(optimiser.getNumberOfIndividuals()); g_generation += 1;
+
+    if args.selection[0] == "threshold":
+        selection_operator.max_iteration_reached_counter = -100;
+
+
+    addToFitnessCircularList();
+
+    previous_gradient_global_fitness = None;
+    previous_gradient_TV             = None;
+    previous_proportion_of_good_flies = 0;
 
     while run_evolutionary_loop:
 
         # The max number of generations has not been reached
         if i < number_of_generation:
 
+            current_gradient_global_fitness = getGradient(x_set, global_fitness_set);
+            current_gradient_TV             = getGradient(x_set, TV_set);
+
+
             # Stagnation has been reached
+            stagnation_reached = False;
+
+                # The threshold selection operator tends to get stuck
+            if args.selection[0] == "threshold":
+                '''print()
+                print()
+                print()
+                print()
+                print()
+                print(
+                    i,
+                    global_fitness_function.global_fitness_set[-1],
+                    current_gradient_global_fitness,
+                    current_gradient_TV,
+                    selection_operator.circular_list.mean(),
+                    selection_operator.max_iteration_reached_counter / optimiser.getNumberOfIndividuals(),
+                    optimiser.getNumberOfIndividuals())'''
+
+                '''if not isinstance(previous_gradient_global_fitness, NoneType):
+                    print(previous_gradient_global_fitness - current_gradient_global_fitness,               previous_gradient_TV - current_gradient_TV
+                    );
+
+                #if selection_operator.max_iteration_reached_counter > 0:
+                if selection_operator.max_iteration_reached_counter / optimiser.getNumberOfIndividuals() > -0.65:
+                    stagnation_reached = True;
+                    print("Threshold selection can't find flies to kill (selection_operator.max_iteration_reached_counter / optimiser.getNumberOfIndividuals() = %f > -0.65)." % (selection_operator.max_iteration_reached_counter / optimiser.getNumberOfIndividuals()));
+
+                    logging.debug("Threshold selection can't find flies to kill (selection_operator.max_iteration_reached_counter / optimiser.getNumberOfIndividuals() = %f > -0.65)." % (selection_operator.max_iteration_reached_counter / optimiser.getNumberOfIndividuals()));
+
+                if selection_operator.circular_list.mean() > -0.1:
+                    stagnation_reached = True;
+                    print("Threshold selection can't find flies to kill (selection_operator.circular_list.mean() = %f > -0.1)." % selection_operator.circular_list.mean());
+
+                    logging.debug("Threshold selection can't find flies to kill (selection_operator.circular_list.mean() = %f > -0.1)." % selection_operator.circular_list.mean());
+
+                if gradient_global_fitness > 0.0:
+                    stagnation_reached = True;
+                    print("Gradient global fitness is no longer negative (%f)." % gradient_global_fitness);
+
+                    logging.debug("Gradient global fitness is no longer negative (%f)." % gradient_global_fitness);
+                    '''
+
+                if selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies > 0:
+
+                    current_proportion_of_good_flies = selection_operator.number_of_good_flies / (selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies);
+
+                    last_proportion_of_good_flies = current_proportion_of_good_flies;
+
+                    '''print("Good: ", 100*current_proportion_of_good_flies, " bad: ", 100*(1-current_proportion_of_good_flies), " old was: ", 100 * previous_proportion_of_good_flies);'''
+
+                    if current_proportion_of_good_flies < previous_proportion_of_good_flies:
+                        stagnation_reached = True;
+                        '''print("There are less good flies this time  (%f) than previously (%f)." % (100 * current_proportion_of_good_flies, 100 * previous_proportion_of_good_flies));'''
+
+                        logging.debug("There are less good flies this time  (%f) than previously (%f)." % (100 * current_proportion_of_good_flies, 100 * previous_proportion_of_good_flies));
+                        previous_proportion_of_good_flies = 0;
+                    else:
+                        previous_proportion_of_good_flies = current_proportion_of_good_flies;
+
             if stagnation >= args.max_stagnation_counter[0]:
+                stagnation_reached = True;
+                '''print("Population stagnation (no improvement of the global fitness over %i generations)." % args.max_stagnation_counter[0]);'''
+                logging.debug("Population stagnation (no improvement of the global fitness over %i generations)." % args.max_stagnation_counter[0]);
+
+            # Reset the counter
+            if args.selection[0] == "threshold":
+                selection_operator.max_iteration_reached_counter = 0;
+                #selection_operator.circular_list = np.ones(10) * -1;
+
+
+                selection_operator.number_of_good_flies = 0;
+                selection_operator.number_of_bad_flies = 0;
+
+            if stagnation_reached:
 
                 # Check the population size
                 current_population_size = optimiser.getNumberOfIndividuals();
@@ -398,6 +544,7 @@ try:
                         # Log message
                         if not isinstance(args.logging, NoneType):
                             logging.debug("Stopping criteria met. Population stagnation and max population size reached. The current population size is %i, the double is %i, which is higher than the threshold %i" % (current_population_size, target_population_size, args.max_pop_size[0]));
+                            '''print("Stopping criteria met. Population stagnation and max population size reached. The current population size is %i, the double is %i, which is higher than the threshold %i" % (current_population_size, target_population_size, args.max_pop_size[0]))'''
 
                 # Perform the mitosis
                 if run_mitosis:
@@ -461,6 +608,11 @@ try:
 
             # Get the current global fitness
             new_global_fitness = global_fitness_function.global_fitness_set[-1];
+
+            addToFitnessCircularList();
+
+            previous_gradient_global_fitness = current_gradient_global_fitness;
+            previous_gradient_TV             = current_gradient_TV;
 
             # The population has not improved since the last check
             if new_global_fitness >= best_global_fitness:
