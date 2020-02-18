@@ -113,7 +113,8 @@ class TomographyGlobalFitness(ObjectiveFunction):
             x = math.floor(i);
             y = math.floor(j);
 
-            image_data[y,x] += individual_weight;
+            if x >= 0 and y >= 0 and x < image_data.shape[1] and y < image_data.shape[0]:
+                image_data[y,x] += individual_weight;
 
         sinogram_data = radon(image_data, theta=self.theta, circle=False)
 
