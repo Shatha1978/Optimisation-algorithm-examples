@@ -21,7 +21,7 @@ from EvolutionaryAlgorithm import *
 
 # Selection operators
 from TournamentSelection      import *
-from RouletteWheel            import *
+from RouletteWheelSelection   import *
 from RankSelection            import *
 
 # Genetic operators
@@ -43,7 +43,7 @@ cooling_rate = 0.98;
 g_test_problem = None;
 
 g_iterations = 0;
-gaussian_mutation = GaussianMutationOperator(0.1, 0.2);
+gaussian_mutation = GaussianMutationOperator(0.1, 0.3);
 
 def visualisationCallback():
     global g_iterations;
@@ -111,13 +111,13 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
         # Optimisation methods implemented in scipy.optimize
         methods = ['Nelder-Mead',
-            #'Powell',
+            'Powell',
             'CG',
-            #'BFGS',
-            #'L-BFGS-B',
-            #'TNC',
-            #'COBYLA',
-            #'SLSQP'
+            'BFGS',
+            'L-BFGS-B',
+            'TNC',
+            'COBYLA',
+            'SLSQP'
         ];
 
         for method in methods:
@@ -158,8 +158,9 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
         optimiser.setSelectionOperator(RankSelection());
 
         # Create the genetic operators
+        gaussian_mutation = GaussianMutationOperator(0.1, 0.3);
         elitism = ElitismOperator(0.1);
-        new_blood = NewBloodOperator(0.1);
+        new_blood = NewBloodOperator(0.0);
         blend_cross_over = BlendCrossoverOperator(0.6, gaussian_mutation);
 
         # Add the genetic operators to the EA
@@ -184,29 +185,27 @@ def run(test_problem, max_iterations: int, number_of_runs: int, file_prefix: str
 
 
 
+        # Parameters for PSO
 
         # Optimisation and visualisation
-        '''g_test_problem.number_of_evaluation = 0;
-        optimiser = PSO(g_test_problem, g_number_of_individuals, initial_guess=initial_guess);
+        g_test_problem.number_of_evaluation = 0;
+        optimiser = PSO(g_test_problem, g_number_of_individuals, initial_guess=initial_guess)
         print("\tOptimiser:", optimiser.full_name);
         if not isinstance(aPreCallback, (str, type(None))):
             aPreCallback(optimiser, file_prefix, run_id);
 
         if run_id == 0 and visualisation:
-            optimiser.plotAnimation(aNumberOfIterations=max_iterations, aCallback=None, aFileName=(file_prefix + "_" + optimiser.short_name + "_%d.png"));
+            optimiser.plotAnimation(aNumberOfIterations=g_iterations, aCallback=visualisationCallback,  aFileName=(file_prefix + "_" + optimiser.short_name + "_%d.png"));
+
         else:
-            for _ in range(g_iterations - 1):
+            for _ in range(1, g_iterations):
                 optimiser.runIteration();
+                visualisationCallback();
 
         df = appendResultToDataFrame(run_id, optimiser, df, columns, file_prefix);
 
         if not isinstance(aPostCallback, (str, type(None))):
             aPostCallback(optimiser, file_prefix, run_id);
-
-
-
-        '''
-
 
 
         # Optimisation and visualisation
