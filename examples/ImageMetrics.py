@@ -6,8 +6,10 @@ from numpy import linalg as LA
 
 from sklearn.utils import check_array
 import skimage.measure as measure;
+import skimage.metrics as metrics;
 import skimage.exposure as exposure;
 from skimage import filters
+
 
 MINIMISATION=[];
 MINIMISATION.append("SAE");
@@ -80,7 +82,7 @@ def getMaxRelativeError(aReferenceVector, aTestVector):
 
 def getSSIM(aReferenceVector, aTestVector):
     check_array(aReferenceVector, aTestVector);
-    return measure.compare_ssim( aReferenceVector, aTestVector);
+    return metrics.structural_similarity( aReferenceVector, aTestVector);
 
 def getSSE(aReferenceVector, aTestVector):
     check_array(aReferenceVector, aTestVector);
@@ -88,7 +90,7 @@ def getSSE(aReferenceVector, aTestVector):
 
 def getMSE(aReferenceVector, aTestVector):
     check_array(aReferenceVector, aTestVector);
-    return measure.compare_mse( aReferenceVector, aTestVector);
+    return metrics.mean_squared_error( aReferenceVector, aTestVector);
 
 def getRMSE(aReferenceVector, aTestVector):
     check_array(aReferenceVector, aTestVector);
@@ -96,19 +98,19 @@ def getRMSE(aReferenceVector, aTestVector):
 
 def getNRMSE_euclidean(aReferenceVector, aTestVector):
     check_array(aReferenceVector, aTestVector);
-    return measure.compare_nrmse(aReferenceVector, aTestVector, 'Euclidean');
+    return metrics.normalized_root_mse(aReferenceVector, aTestVector, normalization='euclidean');
 
 def getNRMSE_mean(aReferenceVector, aTestVector):
     check_array(aReferenceVector, aTestVector);
-    return measure.compare_nrmse(aReferenceVector, aTestVector, 'mean');
+    return metrics.normalized_root_mse(aReferenceVector, aTestVector, normalization='mean');
 
 def getNRMSE_minMax(aReferenceVector, aTestVector):
     check_array(aReferenceVector, aTestVector);
-    return measure.compare_nrmse(aReferenceVector, aTestVector, 'min-max');
+    return metrics.normalized_root_mse(aReferenceVector, aTestVector, normalization='min-max');
 
 def getPSNR(aReferenceVector, aTestVector):
     check_array(aReferenceVector, aTestVector);
-    return measure.compare_psnr(aReferenceVector, aTestVector, aReferenceVector.max() - aReferenceVector.min());
+    return metrics.peak_signal_noise_ratio(aReferenceVector, aTestVector, data_range=aReferenceVector.max() - aReferenceVector.min());
 
 def getNCC(aReferenceVector, aTestVector):
     check_array(aReferenceVector, aTestVector);
