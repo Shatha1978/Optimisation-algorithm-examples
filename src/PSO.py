@@ -14,6 +14,7 @@ class PSO(Optimiser):
         # Name of the algorithm
         self.full_name = "Particle Swarm Optimisation";
         self.short_name = "PSO";
+        self.number_created_children = 0;
 
         # Add initial guess if any
         if not isinstance(self.initial_guess, NoneType):
@@ -28,6 +29,9 @@ class PSO(Optimiser):
 
         # Number of new particles created
         self.number_created_particles = self.getNumberOfParticles();
+
+        # Number of new particles moved
+        self.number_moved_particles = 0;
 
         # Store the best particle
         self.best_solution = None;
@@ -62,6 +66,9 @@ class PSO(Optimiser):
 
             # Update the particle's position and velocity
             particle.update();
+
+        # Update the number of particles moved
+        self.number_moved_particles += self.getNumberOfParticles();
 
         # Update the swarm's best known position
         self.saveBestParticle()
