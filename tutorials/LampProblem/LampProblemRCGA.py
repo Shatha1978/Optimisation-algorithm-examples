@@ -137,7 +137,7 @@ def logStatistics(aNumberOfIndividuals):
     if not isinstance(args.logging, NoneType):
         if g_first_log:
             g_first_log = False;
-            logging.info("generation,new_individual_counter,event,number_of_emission_points,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,Average_fitness_value");
+            logging.info("generation,new_individual_counter,event,number_of_emission_points,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,Average_fitness_value,Number_of_lamps");
 
         ref  =  global_fitness_function.ground_truth;
         test = global_fitness_function.population_image_data;
@@ -157,7 +157,7 @@ def logStatistics(aNumberOfIndividuals):
 
         #logging.info("%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_iteration,g_log_event,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,mean_relative_error_sinogram,max_relative_error_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,mean_relative_error_reconstruction,max_relative_error_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction));
 
-        logging.info("%i,%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_iteration,optimiser.number_created_children,g_log_event,aNumberOfIndividuals,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,optimiser.average_objective_value));
+        logging.info("%i,%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i" % (g_iteration,optimiser.number_created_children,g_log_event,aNumberOfIndividuals,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,optimiser.average_objective_value,global_fitness_function.getNumberOfLamps(optimiser.best_solution.parameter_set)));
 
         g_log_event="";
 
@@ -200,6 +200,8 @@ try:
 
     global_fitness_function.average_fitness_set.append(optimiser.average_objective_value);
     global_fitness_function.best_fitness_set.append(global_fitness_function.global_fitness_set[-1]);
+    global_fitness_function.number_of_lamps_set.append(global_fitness_function.getNumberOfLamps(optimiser.best_solution.parameter_set));
+
 
     # Default tournament size
     tournament_size = 2;
@@ -286,6 +288,7 @@ try:
             optimiser.runIteration();
             global_fitness_function.average_fitness_set.append(optimiser.average_objective_value);
             global_fitness_function.best_fitness_set.append(global_fitness_function.global_fitness_set[-1]);
+            global_fitness_function.number_of_lamps_set.append(global_fitness_function.getNumberOfLamps(optimiser.best_solution.parameter_set));
 
             # Log the statistics
             g_log_event="Optimisation loop"; logStatistics(optimiser.getNumberOfIndividuals()); g_iteration += 1;
@@ -322,7 +325,10 @@ try:
 
                     # Update the main window
                     global_fitness_function.plot(fig, ax, i, number_of_iterations)
-                    plt.pause(5.00)
+                    #fig.canvas.draw();
+                    #fig.canvas.flush_events();
+                    #plt.pause(0);
+                    #plt.clf();
                     #plt.savefig('test.eps', format='eps', bbox_inches='tight', pad_inches=1.0, dpi=600)
 
             # Increment the counter

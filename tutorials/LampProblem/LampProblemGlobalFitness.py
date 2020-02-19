@@ -41,6 +41,7 @@ class LampProblemGlobalFitness(ObjectiveFunction):
         self.global_fitness_set = [];
         self.average_fitness_set = [];
         self.best_fitness_set = [];
+        self.number_of_lamps_set = [];
 
         self.global_error_term_set = [];
         self.global_regularisation_term_set = [];
@@ -52,8 +53,9 @@ class LampProblemGlobalFitness(ObjectiveFunction):
         for _ in range(aSearchSpaceDimension):
             self.boundaries.append([0, self.room_width - 1]);
             self.boundaries.append([0, self.room_height - 1]);
+            self.boundaries.append([0, 1]);
 
-        super().__init__(2 * aSearchSpaceDimension,
+        super().__init__(3 * aSearchSpaceDimension,
                          self.boundaries,
                          self.objectiveFunction,
                          ObjectiveFunction.MAXIMISATION);
@@ -69,13 +71,28 @@ class LampProblemGlobalFitness(ObjectiveFunction):
     def createLampMap(self, aParameterSet):
         image_data = np.zeros((self.room_height, self.room_width), np.float32)
 
-        for i,j in zip(aParameterSet[0::2], aParameterSet[1::2]):
-            x = math.floor(i);
-            y = math.floor(j);
+        for i,j,on in zip(aParameterSet[0::3], aParameterSet[1::3], aParameterSet[2::3]):
+            if on >= 0.5:
+                x = math.floor(i);
+                y = math.floor(j);
 
-            self.addLampToImage(image_data, x, y, 1);
+                self.addLampToImage(image_data, x, y, 1);
 
         return image_data;
+
+    def getNumberOfLamps(self, aParameterSet):
+        lamp_in1 = np.array(aParameterSet[0::3]) >= 0;
+        lamp_in2 = np.array(aParameterSet[0::3]) < self.room_width;
+        lamp_in3 = np.array(aParameterSet[1::3]) >= 0;
+        lamp_in4 = np.array(aParameterSet[2::3]) < self.room_height;
+        lamp_on = np.array(aParameterSet[2::3]) >= 0.5;
+
+        lamp_used = np.logical_and(lamp_in1, lamp_in2);
+        lamp_used = np.logical_and(lamp_used, lamp_in3);
+        lamp_used = np.logical_and(lamp_used, lamp_in4);
+        lamp_used = np.logical_and(lamp_used, lamp_on);
+
+        return (len(np.nonzero(lamp_used)[0]));
 
     def addLampToImage(self, overlay_image, x, y, l):
 
@@ -142,8 +159,11 @@ class LampProblemGlobalFitness(ObjectiveFunction):
 
             self.fig = 1;
 
-            # Plot the original image
-            ax[0, 0].set_title("Original");
+            # Plot the number of lamps
+            ax[0, 0].set_title("Number of lamps");
+            ax[0, 0].set_xlabel("Generation");
+            ax[0, 0].set_ylabel("Number of lamps");
+            self.ax0, = ax[0, 0].plot(range(len(self.number_of_lamps_set)), self.number_of_lamps_set)
 
             # Plot the image from the flies
             ax[0, 1].set_title("Lamps");
@@ -152,20 +172,24 @@ class LampProblemGlobalFitness(ObjectiveFunction):
             ax[1, 0].set_title("Fitness best individual");
             ax[1, 0].set_xlabel("Generation");
             ax[1, 0].set_ylabel("Fitness");
+            self.ax1, = ax[1, 0].plot(range(len(self.best_fitness_set)), self.best_fitness_set)
 
             # Plot the image from the flies
             ax[1, 1].set_title("Average fitness");
             ax[1, 1].set_xlabel("Generation");
             ax[1, 1].set_ylabel("Fitness");
+            self.ax2, = ax[1, 1].plot(range(len(self.average_fitness_set)), self.average_fitness_set)
+        else:
+            # Plot the number of lamps
+            self.ax0.set_data(range(len(self.number_of_lamps_set)), self.number_of_lamps_set);
 
-        # Plot the original image
-        ax[0, 0].imshow(self.ground_truth, cmap=plt.cm.Greys_r)
+            # Plot the image from the flies
+            self.ax1.set_xdata(range(len(self.best_fitness_set)));
+            self.ax1.set_ydata(self.best_fitness_set);
+
+            # Plot the image from the flies
+            self.ax2.set_xdata(range(len(self.average_fitness_set)));
+            self.ax2.set_ydata(self.average_fitness_set);
 
         # Plot the image from the flies
         ax[0, 1].imshow(self.population_image_data, cmap=plt.cm.Greys_r)
-
-        # Plot the image from the flies
-        ax[1, 0].plot(range(len(self.best_fitness_set)), self.best_fitness_set)
-
-        # Plot the image from the flies
-        ax[1, 1].plot(range(len(self.average_fitness_set)), self.average_fitness_set)
