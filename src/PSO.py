@@ -35,7 +35,9 @@ class PSO(Optimiser):
 
         # Store the best particle
         self.best_solution = None;
+        self.average_objective_value = None;
         self.saveBestParticle();
+
 
 
     def evaluate(self, aParameterSet):
@@ -49,10 +51,15 @@ class PSO(Optimiser):
         # And keep track of who is the best particles
         best_particle_index = 0;
 
+        self.average_objective_value = 0;
+
         for i in range(self.getNumberOfParticles()):
+            self.average_objective_value += self.current_solution_set[i].getObjective();
 
             if (self.current_solution_set[best_particle_index].getObjective() > self.current_solution_set[i].getObjective()):
                 best_particle_index = i;
+
+        self.average_objective_value /= self.getNumberOfParticles();
 
         if isinstance(self.best_solution, NoneType):
             self.best_solution =  self.current_solution_set[best_particle_index].copy();

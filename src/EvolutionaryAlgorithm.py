@@ -51,6 +51,8 @@ class EvolutionaryAlgorithm(Optimiser):
         self.global_fitness = None;
         self.global_fitness_function = aGlobalFitnessFunction;
 
+        self.average_objective_value = None;
+
         if self.global_fitness_function != 0 and self.global_fitness_function != None:
 
             # Minimisation
@@ -118,10 +120,18 @@ class EvolutionaryAlgorithm(Optimiser):
         # Compute the fitness value of all the individual
         # And keep track of who is the best individual
         best_individual_index = 0;
+
+        self.average_objective_value = 0;
+
         for i in range(self.getNumberOfIndividuals()):
             self.current_solution_set[i].computeObjectiveFunction();
+
+            self.average_objective_value += self.current_solution_set[i].getObjective();
+
             if (self.current_solution_set[best_individual_index].getObjective() < self.current_solution_set[i].getObjective()):
                 best_individual_index = i;
+
+        self.average_objective_value /= self.getNumberOfIndividuals();
 
         self.best_solution = self.current_solution_set[best_individual_index].copy();
 
@@ -149,7 +159,7 @@ class EvolutionaryAlgorithm(Optimiser):
 
 
         if self.elitism_operator != None:
-            math.floor(self.elitism_operator.getProbability() * self.getNumberOfIndividuals())
+            number_of_individuals_by_elitism = math.floor(self.elitism_operator.getProbability() * self.getNumberOfIndividuals())
 
         # Make sure we keep the best individual
         # EVEN if self.elitism_probability is null
