@@ -1,11 +1,12 @@
 import math
 
 import numpy as np
-import cv2
+#import cv2
 
 import matplotlib.pyplot as plt
 
 from skimage.io import imread, imsave
+from skimage.draw import circle
 #from skimage import data_dir
 from skimage.transform import radon, iradon, iradon_sart
 from scipy.ndimage import zoom
@@ -38,13 +39,14 @@ class LampProblemGlobalFitness(ObjectiveFunction):
         self.fig = None;
         ax  = None;
         self.global_fitness_set = [];
+        self.average_fitness_set = [];
+        self.best_fitness_set = [];
+
         self.global_error_term_set = [];
         self.global_regularisation_term_set = [];
         self.current_population = None;
         self.number_of_calls = 0;
         self.save_best_solution = False;
-
-        type_of_optimisation = ObjectiveFunction.MAXIMISATION;
 
         self.boundaries = [];
         for _ in range(aSearchSpaceDimension):
@@ -54,13 +56,15 @@ class LampProblemGlobalFitness(ObjectiveFunction):
         super().__init__(2 * aSearchSpaceDimension,
                          self.boundaries,
                          self.objectiveFunction,
-                         type_of_optimisation);
+                         ObjectiveFunction.MAXIMISATION);
 
         self.name = "anObjective";
 
     def getArea(self):
         return self.room_width * self.room_height;
 
+    def getProblemSize(self):
+        return self.getArea() / (math.pi * self.lamp_radius * self.lamp_radius);
 
     def createLampMap(self, aParameterSet):
         image_data = np.zeros((self.room_height, self.room_width), np.float32)
@@ -76,23 +80,15 @@ class LampProblemGlobalFitness(ObjectiveFunction):
     def addLampToImage(self, overlay_image, x, y, l):
 
         # Draw circles corresponding to the lamps
-        black_image = np.zeros((self.room_height, self.room_width), np.float32)
-        cv2.circle(black_image, (x,y), self.lamp_radius, (l, l, l), -1)
-        np.add(overlay_image, black_image, overlay_image);
+        rr, cc = circle(y, x, self.lamp_radius, overlay_image.shape);
+        overlay_image[rr, cc] += 1;
+
 
     def areaEnlightened(self, overlay_image):
-        return np.array(overlay_image).sum();
+        return len(np.nonzero(overlay_image != 0)[0]);
 
     def areaOverlap(self, overlay_image):
-
-        areaOver = 0
-        for i in range(overlay_image.shape[0]):
-            for j in range(overlay_image.shape[1]):
-
-                if (overlay_image[i,j] > 1.5):
-                    areaOver += overlay_image[i,j] - 1;
-
-        return areaOver;
+        return len(np.nonzero(overlay_image > 1)[0]);
 
     def objectiveFunction(self, aParameterSet, aSavePopulationFlag = True):
 
@@ -137,17 +133,6 @@ class LampProblemGlobalFitness(ObjectiveFunction):
         window_title = "Generation " + str(aGenerationID) + "/" + str(aTotalNumberOfGenerations) + " - Global fitness: " + str(self.global_fitness_set[-1]);
 
         fig.canvas.set_window_title(window_title)
-        theta = [];
-        theta.append(self.theta[0])
-
-        if theta[-1] != self.theta[math.floor(len(self.theta) * 0.25)]:
-            theta.append(self.theta[math.floor(len(self.theta) * 0.25)])
-
-        if theta[-1] != self.theta[math.floor(len(self.theta) * 0.5)]:
-            theta.append(self.theta[math.floor(len(self.theta) * 0.5)])
-
-        if theta[-1] != self.theta[math.floor(len(self.theta) * 0.75)]:
-            theta.append(self.theta[math.floor(len(self.theta) * 0.75)])
 
         #plt.axis([0, 10, 0, 1])
 
@@ -159,8 +144,28 @@ class LampProblemGlobalFitness(ObjectiveFunction):
 
             # Plot the original image
             ax[0, 0].set_title("Original");
-            ax[0, 0].imshow(self.ground_truth, cmap=plt.cm.Greys_r)
 
             # Plot the image from the flies
             ax[0, 1].set_title("Lamps");
-            ax[0, 1].imshow(self.population_image_data, cmap=plt.cm.Greys_r)
+
+            # Plot the image from the flies
+            ax[1, 0].set_title("Fitness best individual");
+            ax[1, 0].set_xlabel("Generation");
+            ax[1, 0].set_ylabel("Fitness");
+
+            # Plot the image from the flies
+            ax[1, 1].set_title("Average fitness");
+            ax[1, 1].set_xlabel("Generation");
+            ax[1, 1].set_ylabel("Fitness");
+
+        # Plot the original image
+        ax[0, 0].imshow(self.ground_truth, cmap=plt.cm.Greys_r)
+
+        # Plot the image from the flies
+        ax[0, 1].imshow(self.population_image_data, cmap=plt.cm.Greys_r)
+
+        # Plot the image from the flies
+        ax[1, 0].plot(range(len(self.best_fitness_set)), self.best_fitness_set)
+
+        # Plot the image from the flies
+        ax[1, 1].plot(range(len(self.average_fitness_set)), self.average_fitness_set)

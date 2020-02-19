@@ -77,7 +77,7 @@ def checkCommandLineArguments():
 
 
 class MyBar(IncrementalBar):
-    suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - Global fitness %(global_fitness).5f - RMSE %(RMSE).5f - TV %(TV).5f%%'
+    suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - Best fitness %(global_fitness).5f - Average fitness %(average_fitness).5f - RMSE %(RMSE).5f - TV %(TV).5f%%'
     @property
     def global_fitness(self):
         global global_fitness_function;
@@ -93,6 +93,10 @@ class MyBar(IncrementalBar):
         global global_fitness_function;
         return global_fitness_function.global_regularisation_term_set[-1]
 
+    @property
+    def average_fitness(self):
+        global optimiser;
+        return optimiser.average_objective_value
 
 def linearInterpolation(start, end, i, j):
     return start + (end - start) * (1 - (j - i) / j);
@@ -113,7 +117,7 @@ def logStatistics(aNumberOfIndividuals):
     if not isinstance(args.logging, NoneType):
         if g_first_log:
             g_first_log = False;
-            logging.info("generation,new_individual_counter,event,number_of_emission_points,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction");
+            logging.info("generation,new_individual_counter,event,number_of_emission_points,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,Average_fitness_value");
 
         ref  =  global_fitness_function.ground_truth;
         test = global_fitness_function.population_image_data;
@@ -133,7 +137,7 @@ def logStatistics(aNumberOfIndividuals):
 
         #logging.info("%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_iteration,g_log_event,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,mean_relative_error_sinogram,max_relative_error_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,mean_relative_error_reconstruction,max_relative_error_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction));
 
-        logging.info("%i,%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f" % (g_iteration,optimiser.number_created_particles+optimiser.number_moved_particles,g_log_event,aNumberOfIndividuals,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction));
+        logging.info("%i,%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_iteration,optimiser.number_created_particles+optimiser.number_moved_particles,g_log_event,aNumberOfIndividuals,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,optimiser.average_objective_value));
 
         g_log_event="";
 
@@ -172,9 +176,12 @@ try:
     optimiser = PSO(global_fitness_function,
         number_of_particles);
 
+    global_fitness_function.average_fitness_set.append(optimiser.average_objective_value);
+    global_fitness_function.best_fitness_set.append(global_fitness_function.global_fitness_set[-1]);
+
     # Show the visualisation
     if args.visualisation:
-        fig, ax = plt.subplots(7,2);
+        fig, ax = plt.subplots(2,2);
         global_fitness_function.plot(fig, ax, 0, number_of_iterations)
 
     # Create a progress bar
@@ -216,6 +223,9 @@ try:
 
             # Run the evolutionary loop
             optimiser.runIteration();
+
+            global_fitness_function.average_fitness_set.append(optimiser.average_objective_value);
+            global_fitness_function.best_fitness_set.append(global_fitness_function.global_fitness_set[-1]);
 
             # Log the statistics
             g_log_event="Optimisation loop"; logStatistics(optimiser.getNumberOfParticles()); g_iteration += 1;

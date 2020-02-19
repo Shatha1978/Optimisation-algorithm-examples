@@ -19,6 +19,7 @@ do
         --number_of_lamps 25 \
         --max_stagnation_counter 0 \
         --weight 0.5 \
+        --visualisation \
         --logging $OUTPUT_DIR/lamp_problem-$run.log
 
         if [ $? -ne 0 ]; then
