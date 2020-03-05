@@ -10,16 +10,15 @@ do
     mkdir $OUTPUT_DIR
 
     ./LampProblemPSO.py \
-        --radius 5 \
-        --room_width 50 \
+        --radius 8 \
+        --room_width 100 \
         --room_height 50 \
         --output $OUTPUT_DIR/with_bad_flies-$run \
         --iterations 50 \
-        --swarm_size 50 \
-        --number_of_lamps 25 \
+        --swarm_size 25 \
+        --number_of_lamps 40 \
         --max_stagnation_counter 0 \
-        --weight 0.5 \
-        --visualisation \
+        --weight 1 \
         --logging $OUTPUT_DIR/lamp_problem-$run.log
 
         if [ $? -ne 0 ]; then

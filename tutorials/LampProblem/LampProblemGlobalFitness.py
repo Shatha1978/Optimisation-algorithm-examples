@@ -58,7 +58,7 @@ class LampProblemGlobalFitness(ObjectiveFunction):
         super().__init__(3 * aSearchSpaceDimension,
                          self.boundaries,
                          self.objectiveFunction,
-                         ObjectiveFunction.MAXIMISATION);
+                         ObjectiveFunction.MINIMISATION);
 
         self.name = "anObjective";
 
@@ -122,6 +122,7 @@ class LampProblemGlobalFitness(ObjectiveFunction):
 
         error_term = IM.getRMSE(self.ground_truth, image_data);
         #fitness = error_term;
+        fitness = error_term;
 
         tv_norm = 0.5 * IM.getTV(image_data);
 
@@ -181,7 +182,7 @@ class LampProblemGlobalFitness(ObjectiveFunction):
             self.ax2, = ax[1, 1].plot(range(len(self.average_fitness_set)), self.average_fitness_set)
         else:
             # Plot the number of lamps
-            self.ax0.set_data(range(len(self.number_of_lamps_set)), self.number_of_lamps_set);
+            '''self.ax0.set_data(range(len(self.number_of_lamps_set)), self.number_of_lamps_set);
 
             # Plot the image from the flies
             self.ax1.set_xdata(range(len(self.best_fitness_set)));
@@ -189,7 +190,31 @@ class LampProblemGlobalFitness(ObjectiveFunction):
 
             # Plot the image from the flies
             self.ax2.set_xdata(range(len(self.average_fitness_set)));
-            self.ax2.set_ydata(self.average_fitness_set);
+            self.ax2.set_ydata(self.average_fitness_set);'''
+
+            # Plot the number of lamps
+            ax[0, 0].clear()
+            ax[0, 0].set_title("Number of lamps");
+            ax[0, 0].set_xlabel("Generation");
+            ax[0, 0].set_ylabel("Number of lamps");
+            self.ax0, = ax[0, 0].plot(range(len(self.number_of_lamps_set)), self.number_of_lamps_set)
+
+            # Plot the image from the flies
+            #ax[0, 1].set_title("Lamps");
+
+            # Plot the image from the flies
+            ax[1, 0].set_title("Fitness best individual");
+            ax[1, 0].set_xlabel("Generation");
+            ax[1, 0].set_ylabel("Fitness");
+            ax[1, 0].clear()
+            self.ax1, = ax[1, 0].plot(range(len(self.best_fitness_set)), self.best_fitness_set)
+
+            # Plot the image from the flies
+            ax[1, 1].set_title("Average fitness");
+            ax[1, 1].set_xlabel("Generation");
+            ax[1, 1].set_ylabel("Fitness");
+            ax[1, 1].clear()
+            self.ax2, = ax[1, 1].plot(range(len(self.average_fitness_set)), self.average_fitness_set)
 
         # Plot the image from the flies
         ax[0, 1].imshow(self.population_image_data, cmap=plt.cm.Greys_r)
