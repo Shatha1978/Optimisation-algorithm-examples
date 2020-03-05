@@ -83,12 +83,15 @@ class EvolutionaryAlgorithm(Optimiser):
             temp = self.global_fitness_function.evaluate(set_of_individuals, self.global_fitness_function.flag);
 
             # The global fitness is improving
-            if (self.global_fitness_function.flag == 1 and self.global_fitness > temp) or (self.global_fitness_function.flag == 2 and self.global_fitness < temp):
+            if (self.global_fitness_function.flag == self.global_fitness_function.MINIMISATION and self.global_fitness > temp) or (self.global_fitness_function.flag == self.global_fitness_function.MAXIMISATION and self.global_fitness < temp):
                 # Store the new population
-                self.best_solution = copy.deepcopy(self.current_solution_set);
+                self.best_solution = [];
 
-            # Save the new global fitness
-            self.global_fitness = temp;
+                for ind in self.current_solution_set:
+                    self.best_solution.append(ind.copy());
+
+                # Save the new global fitness
+                self.global_fitness = temp;
 
             if anUpdateIndividualLocalFitnessFlag:
                 # Compute the local fitnessof every individual
