@@ -24,7 +24,8 @@ class MarginalFitness(ObjectiveFunction):
 
         self.number_of_calls += 1;
 
-        distance_with_individual = self.global_fitness_function.global_fitness_set[-1];
+        distance_with_individual = self.global_fitness_function.current_global_fitness;
+        #distance_with_individual = self.global_fitness_function.global_fitness_set[-1];
 
         population_without_individual = [];
         individual_removed = False;
@@ -39,7 +40,8 @@ class MarginalFitness(ObjectiveFunction):
                 for j in range(self.number_of_dimensions):
                     if aSolution[j] != self.global_fitness_function.current_population[i *  self.number_of_dimensions + j]:
                         individual_removed = False;
-                else:
+
+                if not individual_removed:
                     for j in range(self.number_of_dimensions):
                         population_without_individual.append(self.global_fitness_function.current_population[i *  self.number_of_dimensions + j]);
 
