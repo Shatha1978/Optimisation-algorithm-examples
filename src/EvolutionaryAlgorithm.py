@@ -81,6 +81,7 @@ class EvolutionaryAlgorithm(Optimiser):
                     set_of_individuals.append(gene);
 
             temp = self.global_fitness_function.evaluate(set_of_individuals, self.global_fitness_function.flag);
+            self.global_fitness_function.current_global_fitness = temp;
 
             # The global fitness is improving
             if (self.global_fitness_function.flag == self.global_fitness_function.MINIMISATION and self.global_fitness > temp) or (self.global_fitness_function.flag == self.global_fitness_function.MAXIMISATION and self.global_fitness < temp):
@@ -98,7 +99,20 @@ class EvolutionaryAlgorithm(Optimiser):
                 for i in range(self.getNumberOfIndividuals()):
                     self.current_solution_set[i].computeObjectiveFunction();
 
+
         return self.global_fitness;
+
+    def resetPopulation(self, aParameterSet):
+        self.current_solution_set = [];
+
+        for i in range(int(len(aParameterSet) / self.objective_function.number_of_dimensions)):
+            gene_set = [];
+            for j in range(self.objective_function.number_of_dimensions):
+                gene_set.append(aParameterSet[i * self.objective_function.number_of_dimensions + j]);
+
+            self.current_solution_set.append(IND.Individual(self.objective_function, gene_set));
+
+        self.evaluateGlobalFitness(True);
 
     def addGeneticOperator(self, aGeneticOperator):
         if aGeneticOperator.getName() == "Elitism operator":
