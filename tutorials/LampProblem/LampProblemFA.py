@@ -36,7 +36,7 @@ import ImageMetrics as IM;
 
 import matplotlib
 #matplotlib.use('PS')
-matplotlib.use('QT5Agg')
+#matplotlib.use('QT5Agg')
 
 NoneType = type(None);
 
@@ -103,26 +103,33 @@ def checkCommandLineArguments():
 
 
 class MyBar(IncrementalBar):
-    suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - Best fitness %(global_fitness).5f - Average fitness %(average_fitness).5f - RMSE %(RMSE).5f - TV %(TV).5f%%'
+    #suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - Best fitness %(global_fitness).5f - Average fitness %(average_fitness).5f - RMSE %(RMSE).5f - TV %(TV).5f%%'
+    suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - '\
+            'Global fitness %(global_fitness).5f -' \
+            'Enlight %(enlightment).1f%% -' \
+            'Overlap %(overlap).1f%% -' \
+            'Lamps %(lamp).5f'
     @property
     def global_fitness(self):
         global global_fitness_function;
         return global_fitness_function.global_fitness_set[-1]
 
     @property
-    def RMSE(self):
+    def enlightment(self):
         global global_fitness_function;
         return global_fitness_function.global_error_term_set[-1]
 
     @property
-    def TV(self):
+    def overlap(self):
         global global_fitness_function;
         return global_fitness_function.global_regularisation_term_set[-1]
 
     @property
-    def average_fitness(self):
-        global optimiser;
-        return 0;#optimiser.average_objective_value
+    def lamp(self):
+        global global_fitness_function;
+        return global_fitness_function.number_of_lamps_set[-1]
+
+
 
 def linearInterpolation(start, end, i, j):
     return start + (end - start) * (1 - (j - i) / j);
@@ -132,61 +139,112 @@ g_first_log = True;
 g_log_event = "";
 g_iteration = 0;
 
+g_best_global_fitness = 0;
+g_best_population = None;
+
 def logStatistics(aNumberOfIndividuals):
 
     global global_fitness_function;
     global g_first_log;
     global g_log_event;
     global g_iteration;
+    global g_best_global_fitness;
+    global g_best_population;
     global optimiser;
+    global selection_operator;
 
     if not isinstance(args.logging, NoneType):
         if g_first_log:
             g_first_log = False;
-            logging.info("generation,new_individual_counter,event,number_of_emission_points,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,Average_fitness_value,Number_of_lamps");
+            logging.info("generation,new_individual_counter,event,number_of_individuals,number_of_lamps,global_fitness,enlightment,overlap,good_flies,bad_flies");
 
-        ref  =  global_fitness_function.ground_truth;
-        test = global_fitness_function.population_image_data;
-        MAE_reconstruction                 = IM.getMAE(ref, test);
-        MSE_reconstruction                 = IM.getMSE(ref, test);
-        RMSE_reconstruction                = IM.getRMSE(ref, test);
-        NRMSE_euclidean_reconstruction     = IM.getNRMSE_euclidean(ref, test);
-        NRMSE_mean_reconstruction          = IM.getNRMSE_mean(ref, test);
-        #NRMSE_min_max_reconstruction       = IM.getNRMSE_minMax(ref, test);
-        cosine_similarity_reconstruction   = IM.getCosineSimilarity(ref, test);
-        #mean_relative_error_reconstruction = IM.getMeanRelativeError(ref, test);
-        #max_relative_error_reconstruction  = IM.getMaxRelativeError(ref, test);
-        SSIM_reconstruction                = IM.getSSIM(ref, test);
-        #PSNR_reconstruction                = IM.getPSNR(ref, test);
-        #ZNCC_reconstruction                = IM.getNCC(ref, test);
-        TV_reconstruction                  = IM.getTV(test);
+        good_flies = 0.0;
+        bad_flies  = 0.0;
 
-        #logging.info("%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_iteration,g_log_event,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,mean_relative_error_sinogram,max_relative_error_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,mean_relative_error_reconstruction,max_relative_error_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction));
+        if not isinstance(selection_operator, NoneType):
+            if selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies != 0:
+                good_flies = 100.0 * selection_operator.number_of_good_flies / (selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies);
+                bad_flies  = 100.0 * selection_operator.number_of_bad_flies  / (selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies);
 
-        #logging.info("%i,%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i" % (g_iteration,optimiser.number_created_children,g_log_event,aNumberOfIndividuals,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,optimiser.average_objective_value,getNumberOfActiveLamps()));
+        logging.info("%i,%i,%s,%i,%i,%f,%f,%f,%f,%f" % (
+            g_iteration,
+            optimiser.number_created_children,
+            g_log_event,
+            aNumberOfIndividuals,
+            global_fitness_function.number_of_lamps_set[-1],
+            global_fitness_function.current_global_fitness,
+            global_fitness_function.global_error_term_set[-1],
+            global_fitness_function.global_regularisation_term_set[-1],
+            good_flies,
+            bad_flies
+        ));
+
+        if g_best_global_fitness < global_fitness_function.current_global_fitness:
+            g_best_global_fitness = global_fitness_function.current_global_fitness;
+            g_best_population = copy.deepcopy(global_fitness_function.current_population);
 
         g_log_event="";
 
 
 args = None;
+local_fitness_function = None;
 
-def getNumberOfActiveLamps():
-    parameter_set = [];
-    for ind in optimiser.current_solution_set:
-        parameter_set.append(ind.parameter_set[0]);
-        parameter_set.append(ind.parameter_set[1]);
-        #parameter_set.append(ind.parameter_set[2]);
 
-        if ind.getObjective() > 0 or ind.parameter_set[2] < 0.5:
-            parameter_set.append(0);
-        else:
-            parameter_set.append(1);
+def filterBadIndividualsOut():
+    global local_fitness_function;
 
-    return global_fitness_function.getNumberOfLamps(parameter_set);
+    number_of_good_individuals = 0;
+    number_of_bad_individuals = 0;
+    good_individual_set = [];
+
+    if args.generational:
+        for individual in optimiser.current_solution_set:
+            if individual.getObjective() > 0:
+                number_of_good_individuals += 1;
+                for parameter in individual.parameter_set:
+                    good_individual_set.append(parameter);
+            else:
+                number_of_bad_individuals += 1;
+
+    elif args.steady_state:
+
+        # Iteratively delete bad individuals
+        number_of_bad_individuals = 1;
+        while number_of_bad_individuals != 0:
+            good_individual_set = [];
+
+            number_of_bad_individuals = 0;
+            number_of_good_individuals = 0;
+
+            for x,y,on in zip(global_fitness_function.current_population[0::3], global_fitness_function.current_population[1::3], global_fitness_function.current_population[2::3]):
+
+                if number_of_bad_individuals == 0:
+
+                    local_fitness = local_fitness_function.objectiveFunction((x, y, on));
+
+                    if local_fitness < 0.0:
+                        number_of_bad_individuals += 1
+                    else:
+                        number_of_good_individuals += 1
+
+                        good_individual_set.append(x);
+                        good_individual_set.append(y);
+                        good_individual_set.append(on);
+
+                else:
+                    good_individual_set.append(x);
+                    good_individual_set.append(y);
+                    good_individual_set.append(on);
+
+            global_fitness_function.current_population = good_individual_set;
+            global_fitness_function.current_global_fitness = global_fitness_function.objectiveFunction(good_individual_set, False);
+
+    return number_of_good_individuals, \
+        optimiser.getNumberOfIndividuals() - number_of_good_individuals, \
+        good_individual_set;
 
 
 try:
-
     args = checkCommandLineArguments()
 
     # Parameters for PSO
@@ -221,7 +279,7 @@ try:
 
     global_fitness_function.average_fitness_set.append(optimiser.average_objective_value);
     global_fitness_function.best_fitness_set.append(global_fitness_function.global_fitness_set[-1]);
-    global_fitness_function.number_of_lamps_set.append(getNumberOfActiveLamps());
+    global_fitness_function.number_of_lamps_set.append(global_fitness_function.number_of_lamps_set[-1]);
 
 
     # Default tournament size
@@ -291,20 +349,86 @@ try:
     # Log the statistics
     g_log_event="Random initial population"; logStatistics(optimiser.getNumberOfIndividuals()); g_iteration += 1;
 
+    global_fitness_before_mitosis = None;
+
+    g_generation = 0;
+
     while run_optimisation_loop:
 
         # The max number of generations has not been reached
         if i < number_of_iterations:
 
             # Stagnation has been reached
+            stagnation_reached = False;
             if stagnation >= args.max_stagnation_counter[0] and args.max_stagnation_counter[0] > 0:
 
-                # Exit the for loop
-                run_optimisation_loop = False;
+                stagnation_reached = True;
 
                 # Log message
                 if not isinstance(args.logging, NoneType):
-                    logging.debug("Stopping criteria met. Population stagnation.");
+                    stagnation_reached = True;
+                    '''print("Population stagnation (no improvement of the global fitness over %i generations)." % args.max_stagnation_counter[0]);'''
+                    logging.debug("Population stagnation (no improvement of the global fitness over %i generations)." % args.max_stagnation_counter[0]);
+
+                # Exit the for loop
+                if not isinstance(global_fitness_before_mitosis, NoneType):
+                    if global_fitness_before_mitosis > global_fitness_function.global_fitness_set[-1]:
+                        logging.debug("Since the last mitosis (old global fitness: %f), the Population has not improved (new global fitness: %f)." % (global_fitness_before_mitosis, global_fitness_function.global_fitness_set[-1]));
+
+                        run_optimisation_loop = False;
+
+                global_fitness_before_mitosis = global_fitness_function.global_fitness_set[-1];
+
+                # Remove the bad flies
+                number_of_good_individuals, number_of_bad_individuals, good_individual_set = filterBadIndividualsOut();
+                optimiser.resetPopulation(good_individual_set);
+                optimiser.evaluateGlobalFitness(False);
+                logging.debug("The population size is %i, there are %i good flies and %i bad flies." % (number_of_good_individuals + number_of_bad_individuals, number_of_good_individuals, number_of_bad_individuals));
+                g_log_event="Slaughtering"; logStatistics(optimiser.getNumberOfIndividuals()); g_generation += 1;
+
+
+            if run_optimisation_loop:
+                # Reset the counter
+                if args.selection[0] == "threshold":
+                    selection_operator.max_iteration_reached_counter = 0;
+                    #selection_operator.circular_list = np.ones(10) * -1;
+
+
+                    selection_operator.number_of_good_flies = 0;
+                    selection_operator.number_of_bad_flies = 0;
+
+                # Perform the mitosis
+                if stagnation_reached:
+
+                    # Check the population size
+                    current_population_size = optimiser.getNumberOfIndividuals();
+                    target_population_size = 2 * current_population_size;
+
+                    # Log message
+                    if not isinstance(args.logging, NoneType):
+                        logging.debug("Mitosis from %i individuals to %i" % (current_population_size, target_population_size));
+
+                    # Decrease the mutation variance
+                    old_mutation_variance = gaussian_mutation.mutation_variance;
+                    gaussian_mutation.mutation_variance /= 2;
+
+
+                    # Perform the mitosis and log the statistics
+                    optimiser.mitosis(gaussian_mutation, args.generational);
+                    optimiser.evaluateGlobalFitness(False);
+                    g_log_event="Mitosis"; logStatistics(optimiser.getNumberOfIndividuals()); g_generation += 1;
+
+                    # Restore the mutation variance
+                    gaussian_mutation.mutation_variance = old_mutation_variance;
+
+                    # Reset the stagnation counter and
+                    # Update the best global fitness
+                    stagnation = 0;
+                    best_global_fitness = global_fitness_function.global_fitness_set[-1];
+
+                    # Increase the mitosis counter
+                    number_of_mitosis += 1;
+
 
             # Decrease the mutation variance
             start = args.initial_mutation_variance[0];
@@ -324,9 +448,9 @@ try:
                 optimiser.evaluateGlobalFitness(True);
                 optimiser.runIteration();
 
-            global_fitness_function.average_fitness_set.append(optimiser.average_objective_value);
-            global_fitness_function.best_fitness_set.append(global_fitness_function.global_fitness_set[-1]);
-            global_fitness_function.number_of_lamps_set.append(getNumberOfActiveLamps());
+            #global_fitness_function.average_fitness_set.append(optimiser.average_objective_value);
+            #global_fitness_function.best_fitness_set.append(global_fitness_function.global_fitness_set[-1]);
+            #global_fitness_function.number_of_lamps_set.append(global_fitness_function.number_of_lamps_set[-1];
 
             # Log the statistics
             g_log_event="Optimisation loop"; logStatistics(optimiser.getNumberOfIndividuals()); g_iteration += 1;
@@ -335,7 +459,7 @@ try:
             new_global_fitness = global_fitness_function.global_fitness_set[-1];
 
             # The population has not improved since the last check
-            if new_global_fitness >= best_global_fitness:
+            if new_global_fitness <= best_global_fitness:
                 stagnation += 1; # Increase the stagnation counter
 
             # The population has improved since the last check
@@ -348,8 +472,8 @@ try:
             # Log message
             if not isinstance(args.logging, NoneType):
                 logging.debug("Global fitness after %i-th generation: %f" % (i, global_fitness_function.global_fitness_set[-1]));
-                logging.debug("RMSE after %i-th generation: %f" % (i, global_fitness_function.global_error_term_set[-1]));
-                logging.debug("TV after %i-th generation: %f" % (i, global_fitness_function.global_regularisation_term_set[-1]));
+                logging.debug("Enlightment after %i-th generation: %f" % (i, global_fitness_function.global_error_term_set[-1]));
+                logging.debug("Overlap after %i-th generation: %f" % (i, global_fitness_function.global_regularisation_term_set[-1]));
 
             # Update progress bar
             bar.next();
@@ -385,6 +509,8 @@ try:
 
     bar.finish();
 
+    optimiser.resetPopulation(g_best_population);
+    g_log_event="Restore"; logStatistics(optimiser.getNumberOfIndividuals()); g_iteration += 1;
 
     # Show the visualisation
     if args.visualisation:
