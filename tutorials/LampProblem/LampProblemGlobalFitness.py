@@ -45,6 +45,7 @@ class LampProblemGlobalFitness(ObjectiveFunction):
 
         self.global_error_term_set = [];
         self.global_regularisation_term_set = [];
+        self.number_of_lamps_set = [];
         self.current_population = None;
         self.number_of_calls = 0;
         self.save_best_solution = False;
@@ -58,7 +59,7 @@ class LampProblemGlobalFitness(ObjectiveFunction):
         super().__init__(3 * aSearchSpaceDimension,
                          self.boundaries,
                          self.objectiveFunction,
-                         ObjectiveFunction.MINIMISATION);
+                         ObjectiveFunction.MAXIMISATION);
 
         self.name = "anObjective";
 
@@ -83,14 +84,40 @@ class LampProblemGlobalFitness(ObjectiveFunction):
     def getNumberOfLamps(self, aParameterSet):
         lamp_in1 = np.array(aParameterSet[0::3]) >= 0;
         lamp_in2 = np.array(aParameterSet[0::3]) < self.room_width;
+
         lamp_in3 = np.array(aParameterSet[1::3]) >= 0;
-        lamp_in4 = np.array(aParameterSet[2::3]) < self.room_height;
+        lamp_in4 = np.array(aParameterSet[1::3]) < self.room_height;
+
         lamp_on = np.array(aParameterSet[2::3]) >= 0.5;
+
+        '''print(len(aParameterSet))
+        print()
+
+        print(aParameterSet)
+        print(        )
+
+        print(lamp_in1)
+        print();
+
+        print(lamp_in2)
+        print();
+
+        print(lamp_in3)
+        print();
+
+        print(lamp_in4)
+        print();
+
+        print(lamp_on)
+        print();'''
 
         lamp_used = np.logical_and(lamp_in1, lamp_in2);
         lamp_used = np.logical_and(lamp_used, lamp_in3);
         lamp_used = np.logical_and(lamp_used, lamp_in4);
         lamp_used = np.logical_and(lamp_used, lamp_on);
+
+        #print(lamp_used)
+        #print(len(np.nonzero(lamp_used)[0]));
 
         return (len(np.nonzero(lamp_used)[0]));
 
@@ -122,7 +149,7 @@ class LampProblemGlobalFitness(ObjectiveFunction):
 
         error_term = IM.getRMSE(self.ground_truth, image_data);
         #fitness = error_term;
-        fitness = error_term;
+        #fitness = error_term;
 
         tv_norm = 0.5 * IM.getTV(image_data);
 
@@ -130,18 +157,19 @@ class LampProblemGlobalFitness(ObjectiveFunction):
 
             save_data = True;
 
-            if len(self.global_fitness_set) > 0 and self.save_best_solution:
+            '''if len(self.global_fitness_set) > 0 and self.save_best_solution:
                 if self.flag == ObjectiveFunction.MINIMISATION and self.global_fitness_set[-1] < fitness:
                     save_data = False;
                 elif self.flag == ObjectiveFunction.MAXIMISATION and self.global_fitness_set[-1] > fitness:
-                    save_data = False;
+                    save_data = False;'''
 
             if save_data:
                 self.current_population = copy.deepcopy(aParameterSet);
                 self.population_image_data = image_data;
                 self.global_fitness_set.append(fitness);
-                self.global_error_term_set.append(error_term);
-                self.global_regularisation_term_set.append(tv_norm);
+                self.global_error_term_set.append(100 * area_enlightened / self.getArea());
+                self.global_regularisation_term_set.append(100 * overlap / self.getArea());
+                self.number_of_lamps_set.append(self.getNumberOfLamps(aParameterSet));
 
         return fitness;
 
@@ -170,16 +198,15 @@ class LampProblemGlobalFitness(ObjectiveFunction):
             ax[0, 1].set_title("Lamps");
 
             # Plot the image from the flies
-            ax[1, 0].set_title("Fitness best individual");
+            ax[1, 0].set_title("Global fitness");
             ax[1, 0].set_xlabel("Generation");
-            ax[1, 0].set_ylabel("Fitness");
-            self.ax1, = ax[1, 0].plot(range(len(self.best_fitness_set)), self.best_fitness_set)
+            self.ax1, = ax[1, 0].plot(range(len(self.global_fitness_set)), self.global_fitness_set)
 
             # Plot the image from the flies
-            ax[1, 1].set_title("Average fitness");
+            ax[1, 1].set_title("Fitness components");
             ax[1, 1].set_xlabel("Generation");
-            ax[1, 1].set_ylabel("Fitness");
-            self.ax2, = ax[1, 1].plot(range(len(self.average_fitness_set)), self.average_fitness_set)
+            self.ax2, = ax[1, 1].plot(range(len(self.global_error_term_set)), self.global_error_term_set)
+            self.ax2, = ax[1, 1].plot(range(len(self.global_regularisation_term_set)), self.global_regularisation_term_set)
         else:
             # Plot the number of lamps
             '''self.ax0.set_data(range(len(self.number_of_lamps_set)), self.number_of_lamps_set);
@@ -203,18 +230,17 @@ class LampProblemGlobalFitness(ObjectiveFunction):
             #ax[0, 1].set_title("Lamps");
 
             # Plot the image from the flies
-            ax[1, 0].set_title("Fitness best individual");
-            ax[1, 0].set_xlabel("Generation");
-            ax[1, 0].set_ylabel("Fitness");
             ax[1, 0].clear()
-            self.ax1, = ax[1, 0].plot(range(len(self.best_fitness_set)), self.best_fitness_set)
+            ax[1, 0].set_title("Global fitness");
+            ax[1, 0].set_xlabel("Generation");
+            self.ax1, = ax[1, 0].plot(range(len(self.global_fitness_set)), self.global_fitness_set)
 
             # Plot the image from the flies
-            ax[1, 1].set_title("Average fitness");
-            ax[1, 1].set_xlabel("Generation");
-            ax[1, 1].set_ylabel("Fitness");
             ax[1, 1].clear()
-            self.ax2, = ax[1, 1].plot(range(len(self.average_fitness_set)), self.average_fitness_set)
+            ax[1, 1].set_title("Fitness components");
+            ax[1, 1].set_xlabel("Generation");
+            self.ax2, = ax[1, 1].plot(range(len(self.global_error_term_set)), self.global_error_term_set)
+            self.ax2, = ax[1, 1].plot(range(len(self.global_regularisation_term_set)), self.global_regularisation_term_set)
 
         # Plot the image from the flies
         ax[0, 1].imshow(self.population_image_data, cmap=plt.cm.Greys_r)
