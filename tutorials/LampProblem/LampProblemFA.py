@@ -346,6 +346,8 @@ try:
     # Run the optimisation loop
     run_optimisation_loop = True;
 
+    next_is_slautering = False;
+
     # Log the statistics
     g_log_event="Random initial population"; logStatistics(optimiser.getNumberOfIndividuals()); g_iteration += 1;
 
@@ -371,7 +373,7 @@ try:
                     logging.debug("Population stagnation (no improvement of the global fitness over %i generations)." % args.max_stagnation_counter[0]);
 
                 # Exit the for loop
-                if not isinstance(global_fitness_before_mitosis, NoneType):
+                if not isinstance(global_fitness_before_mitosis, NoneType) and next_is_slautering:
                     if global_fitness_before_mitosis > global_fitness_function.global_fitness_set[-1]:
                         logging.debug("Since the last mitosis (old global fitness: %f), the Population has not improved (new global fitness: %f)." % (global_fitness_before_mitosis, global_fitness_function.global_fitness_set[-1]));
 
@@ -380,11 +382,12 @@ try:
                 global_fitness_before_mitosis = global_fitness_function.global_fitness_set[-1];
 
                 # Remove the bad flies
-                number_of_good_individuals, number_of_bad_individuals, good_individual_set = filterBadIndividualsOut();
-                optimiser.resetPopulation(good_individual_set);
-                optimiser.evaluateGlobalFitness(False);
-                logging.debug("The population size is %i, there are %i good flies and %i bad flies." % (number_of_good_individuals + number_of_bad_individuals, number_of_good_individuals, number_of_bad_individuals));
-                g_log_event="Slaughtering"; logStatistics(optimiser.getNumberOfIndividuals()); g_generation += 1;
+                if next_is_slautering:
+                    number_of_good_individuals, number_of_bad_individuals, good_individual_set = filterBadIndividualsOut();
+                    optimiser.resetPopulation(good_individual_set);
+                    optimiser.evaluateGlobalFitness(False);
+                    logging.debug("The population size is %i, there are %i good flies and %i bad flies." % (number_of_good_individuals + number_of_bad_individuals, number_of_good_individuals, number_of_bad_individuals));
+                    g_log_event="Slaughtering"; logStatistics(optimiser.getNumberOfIndividuals()); g_generation += 1;
 
 
             if run_optimisation_loop:
@@ -400,26 +403,29 @@ try:
                 # Perform the mitosis
                 if stagnation_reached:
 
-                    # Check the population size
-                    current_population_size = optimiser.getNumberOfIndividuals();
-                    target_population_size = 2 * current_population_size;
+                    if not next_is_slautering:
+                        # Check the population size
+                        current_population_size = optimiser.getNumberOfIndividuals();
+                        target_population_size = 2 * current_population_size;
 
-                    # Log message
-                    if not isinstance(args.logging, NoneType):
-                        logging.debug("Mitosis from %i individuals to %i" % (current_population_size, target_population_size));
+                        # Log message
+                        if not isinstance(args.logging, NoneType):
+                            logging.debug("Mitosis from %i individuals to %i" % (current_population_size, target_population_size));
 
-                    # Decrease the mutation variance
-                    old_mutation_variance = gaussian_mutation.mutation_variance;
-                    gaussian_mutation.mutation_variance /= 2;
+                        # Decrease the mutation variance
+                        old_mutation_variance = gaussian_mutation.mutation_variance;
+                        gaussian_mutation.mutation_variance /= 2;
 
 
-                    # Perform the mitosis and log the statistics
-                    optimiser.mitosis(gaussian_mutation, args.generational);
-                    optimiser.evaluateGlobalFitness(False);
-                    g_log_event="Mitosis"; logStatistics(optimiser.getNumberOfIndividuals()); g_generation += 1;
+                        # Perform the mitosis and log the statistics
+                        optimiser.mitosis(gaussian_mutation, args.generational);
+                        optimiser.evaluateGlobalFitness(False);
+                        g_log_event="Mitosis"; logStatistics(optimiser.getNumberOfIndividuals()); g_generation += 1;
 
-                    # Restore the mutation variance
-                    gaussian_mutation.mutation_variance = old_mutation_variance;
+                        # Restore the mutation variance
+                        gaussian_mutation.mutation_variance = old_mutation_variance;
+
+                    next_is_slautering = not next_is_slautering;
 
                     # Reset the stagnation counter and
                     # Update the best global fitness
@@ -509,7 +515,14 @@ try:
 
     bar.finish();
 
+    number_of_good_individuals, number_of_bad_individuals, good_individual_set = filterBadIndividualsOut();
+    optimiser.resetPopulation(good_individual_set);
+    optimiser.evaluateGlobalFitness(False);
+    logging.debug("The population size is %i, there are %i good flies and %i bad flies." % (number_of_good_individuals + number_of_bad_individuals, number_of_good_individuals, number_of_bad_individuals));
+    g_log_event="Slaughtering"; logStatistics(optimiser.getNumberOfIndividuals()); g_generation += 1;
+
     optimiser.resetPopulation(g_best_population);
+    optimiser.evaluateGlobalFitness(False);
     g_log_event="Restore"; logStatistics(optimiser.getNumberOfIndividuals()); g_iteration += 1;
 
     # Show the visualisation
