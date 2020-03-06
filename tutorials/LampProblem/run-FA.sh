@@ -20,12 +20,12 @@ do
             ./LampProblemFA.py \
                 --$MODE \
                 --radius 8 \
-                --room_width 100 \
-                --room_height 50 \
+                --room_width 142 \
+                --room_height 142 \
                 --output $OUTPUT_DIR/with_bad_flies-$run \
-                --generations 50 \
-                --number_of_lamps 40 \
-                --max_stagnation_counter 0 \
+                --generations 500 \
+                --number_of_lamps 5 \
+                --max_stagnation_counter 5 \
                 --initial_mutation_variance 16 \
                 --final_mutation_variance 8 \
                 --weight 1 \
