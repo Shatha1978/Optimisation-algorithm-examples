@@ -187,11 +187,12 @@ class EvolutionaryAlgorithm(Optimiser):
         #print(number_of_individuals_by_elitism)
 
         # Copy the best parents into the population of children
-        for i in range(number_of_individuals_by_elitism):
-            individual = self.current_solution_set[index_sorted[i]]
-            offspring_population.append(individual.copy());
-            if self.elitism_operator != None:
-                self.elitism_operator.use_count += 1;
+        if  number_of_individuals_by_elitism < self.getNumberOfIndividuals():
+            for i in range(number_of_individuals_by_elitism):
+                individual = self.current_solution_set[index_sorted[i]]
+                offspring_population.append(individual.copy());
+                if self.elitism_operator != None:
+                    self.elitism_operator.use_count += 1;
 
         probability_sum = 0.0;
         for genetic_opterator in self.genetic_opterator_set:
