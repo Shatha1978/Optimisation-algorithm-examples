@@ -1,8 +1,13 @@
 #!/bin/sh
 
+current_dir=$PWD;
+
 date
 for pb_size in 1000 3 5 10 20 100
 do
+    # Restore the working directory
+    cd $current_dir
+
     pd_dir="pb_size_$pb_size"
     if [ ! -d $pd_dir ]
     then
@@ -83,5 +88,14 @@ do
             echo
         done
     done
+
+    # Change the working directory
+    cd $current_dir/$pb_size
+    ../extact.sh
 done
+
+# Restore the working directory
+cd $current_dir
+./boxplot.py
+
 date
