@@ -156,15 +156,17 @@ def logStatistics(aNumberOfIndividuals):
     if not isinstance(args.logging, NoneType):
         if g_first_log:
             g_first_log = False;
+
             logging.info("generation,new_individual_counter,event,number_of_individuals,number_of_lamps,global_fitness,enlightment,overlap,good_flies,bad_flies");
 
         good_flies = 0.0;
         bad_flies  = 0.0;
 
         if not isinstance(selection_operator, NoneType):
-            if selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies != 0:
-                good_flies = 100.0 * selection_operator.number_of_good_flies / (selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies);
-                bad_flies  = 100.0 * selection_operator.number_of_bad_flies  / (selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies);
+            if selection_operator.name == "Threshold selection":
+                if selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies != 0:
+                    good_flies = 100.0 * selection_operator.number_of_good_flies / (selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies);
+                    bad_flies  = 100.0 * selection_operator.number_of_bad_flies  / (selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies);
 
         logging.info("%i,%i,%s,%i,%i,%f,%f,%f,%f,%f" % (
             g_iteration,
