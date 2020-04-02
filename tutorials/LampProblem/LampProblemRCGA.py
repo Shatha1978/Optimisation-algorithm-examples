@@ -38,7 +38,7 @@ import ImageMetrics as IM;
 
 import matplotlib
 #matplotlib.use('PS')
-matplotlib.use('QT5Agg')
+#matplotlib.use('QT5Agg')
 
 NoneType = type(None);
 
@@ -97,26 +97,32 @@ def checkCommandLineArguments():
 
 
 class MyBar(IncrementalBar):
-    suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - Best fitness %(global_fitness).5f - Average fitness %(average_fitness).5f - RMSE %(RMSE).5f - TV %(TV).5f%%'
+    #suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - Best fitness %(global_fitness).5f - Average fitness %(average_fitness).5f - RMSE %(RMSE).5f - TV %(TV).5f%%'
+    suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - '\
+            'Global fitness %(global_fitness).5f -' \
+            'Enlight %(enlightment).1f%% -' \
+            'Overlap %(overlap).1f%% -' \
+            'Lamps %(lamp).5f'
     @property
     def global_fitness(self):
         global global_fitness_function;
         return global_fitness_function.global_fitness_set[-1]
 
     @property
-    def RMSE(self):
+    def enlightment(self):
         global global_fitness_function;
         return global_fitness_function.global_error_term_set[-1]
 
     @property
-    def TV(self):
+    def overlap(self):
         global global_fitness_function;
         return global_fitness_function.global_regularisation_term_set[-1]
 
     @property
-    def average_fitness(self):
-        global optimiser;
-        return optimiser.average_objective_value
+    def lamp(self):
+        global global_fitness_function;
+        return global_fitness_function.number_of_lamps_set[-1]
+
 
 def linearInterpolation(start, end, i, j):
     return start + (end - start) * (1 - (j - i) / j);
@@ -126,38 +132,51 @@ g_first_log = True;
 g_log_event = "";
 g_iteration = 0;
 
+g_best_global_fitness = 0;
+g_best_population = None;
+
 def logStatistics(aNumberOfIndividuals):
 
     global global_fitness_function;
     global g_first_log;
     global g_log_event;
     global g_iteration;
+    global g_best_global_fitness;
+    global g_best_population;
     global optimiser;
+    global selection_operator;
 
     if not isinstance(args.logging, NoneType):
         if g_first_log:
             g_first_log = False;
-            logging.info("generation,new_individual_counter,event,number_of_emission_points,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,Average_fitness_value,Number_of_lamps");
 
-        ref  =  global_fitness_function.ground_truth;
-        test = global_fitness_function.population_image_data;
-        MAE_reconstruction                 = IM.getMAE(ref, test);
-        MSE_reconstruction                 = IM.getMSE(ref, test);
-        RMSE_reconstruction                = IM.getRMSE(ref, test);
-        NRMSE_euclidean_reconstruction     = IM.getNRMSE_euclidean(ref, test);
-        NRMSE_mean_reconstruction          = IM.getNRMSE_mean(ref, test);
-        #NRMSE_min_max_reconstruction       = IM.getNRMSE_minMax(ref, test);
-        cosine_similarity_reconstruction   = IM.getCosineSimilarity(ref, test);
-        #mean_relative_error_reconstruction = IM.getMeanRelativeError(ref, test);
-        #max_relative_error_reconstruction  = IM.getMaxRelativeError(ref, test);
-        SSIM_reconstruction                = IM.getSSIM(ref, test);
-        #PSNR_reconstruction                = IM.getPSNR(ref, test);
-        #ZNCC_reconstruction                = IM.getNCC(ref, test);
-        TV_reconstruction                  = IM.getTV(test);
+            logging.info("generation,new_individual_counter,event,number_of_individuals,number_of_lamps,global_fitness,enlightment,overlap,good_flies,bad_flies");
 
-        #logging.info("%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_iteration,g_log_event,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,mean_relative_error_sinogram,max_relative_error_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,mean_relative_error_reconstruction,max_relative_error_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction));
+        good_flies = 0.0;
+        bad_flies  = 0.0;
 
-        logging.info("%i,%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i" % (g_iteration,optimiser.number_created_children,g_log_event,aNumberOfIndividuals,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,optimiser.average_objective_value,global_fitness_function.getNumberOfLamps(optimiser.best_solution.parameter_set)));
+        if not isinstance(selection_operator, NoneType):
+            if selection_operator.name == "Threshold selection":
+                if selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies != 0:
+                    good_flies = 100.0 * selection_operator.number_of_good_flies / (selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies);
+                    bad_flies  = 100.0 * selection_operator.number_of_bad_flies  / (selection_operator.number_of_good_flies + selection_operator.number_of_bad_flies);
+
+        logging.info("%i,%i,%s,%i,%i,%f,%f,%f,%f,%f" % (
+            g_iteration,
+            optimiser.number_created_children,
+            g_log_event,
+            aNumberOfIndividuals,
+            global_fitness_function.number_of_lamps_set[-1],
+            global_fitness_function.global_fitness_set[-1],
+            global_fitness_function.global_error_term_set[-1],
+            global_fitness_function.global_regularisation_term_set[-1],
+            good_flies,
+            bad_flies
+        ));
+
+        if g_best_global_fitness < global_fitness_function.global_fitness_set[-1]:
+            g_best_global_fitness = global_fitness_function.global_fitness_set[-1];
+            g_best_population = copy.deepcopy(global_fitness_function.current_population);
 
         g_log_event="";
 
@@ -218,18 +237,21 @@ try:
 
 
     # Set the selection operator
+    selection_operator = None;
     if args.selection[0] == "dual" or args.selection[0] == "tournament":
-        optimiser.setSelectionOperator(TournamentSelection(tournament_size));
+        selection_operator = TournamentSelection(tournament_size);
     elif args.selection[0] == "ranking":
-        optimiser.setSelectionOperator(RankSelection());
+        selection_operator = RankSelection();
     elif args.selection[0] == "roulette":
-        optimiser.setSelectionOperator(RouletteWheelSelection());
+        selection_operator = RouletteWheelSelection();
     else:
         raise ValueError('Invalid selection operator "%s". Choose "threshold", "tournament" or "dual".' % (args.selection[0]))
 
+    optimiser.setSelectionOperator(selection_operator);
+
     # Create the genetic operators
-    gaussian_mutation = GaussianMutationOperator(0.3, args.initial_mutation_variance[0]);
-    blend_cross_over = BlendCrossoverOperator(0.6, gaussian_mutation);
+    gaussian_mutation = GaussianMutationOperator(0.8, args.initial_mutation_variance[0]);
+    blend_cross_over = BlendCrossoverOperator(0.2, gaussian_mutation);
 
     # Add the genetic operators to the EA
     optimiser.addGeneticOperator(blend_cross_over);
@@ -264,6 +286,8 @@ try:
     # Log the statistics
     g_log_event="Random initial population"; logStatistics(optimiser.getNumberOfIndividuals()); g_iteration += 1;
 
+    print(i, optimiser.best_solution.objective);
+
     while run_optimisation_loop:
 
         # The max number of generations has not been reached
@@ -293,11 +317,13 @@ try:
             # Log the statistics
             g_log_event="Optimisation loop"; logStatistics(optimiser.getNumberOfIndividuals()); g_iteration += 1;
 
+            print(i, optimiser.best_solution.objective);
+
             # Get the current global fitness
             new_global_fitness = global_fitness_function.global_fitness_set[-1];
 
             # The population has not improved since the last check
-            if new_global_fitness >= best_global_fitness:
+            if new_global_fitness <= best_global_fitness:
                 stagnation += 1; # Increase the stagnation counter
 
             # The population has improved since the last check
