@@ -26,9 +26,11 @@ import ImageMetrics as IM;
 
 import matplotlib
 #matplotlib.use('PS')
-matplotlib.use('QT5Agg')
+#matplotlib.use('QT5Agg')
 
 NoneType = type(None);
+
+
 
 
 
@@ -77,26 +79,32 @@ def checkCommandLineArguments():
 
 
 class MyBar(IncrementalBar):
-    suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - Best fitness %(global_fitness).5f - Average fitness %(average_fitness).5f - RMSE %(RMSE).5f - TV %(TV).5f%%'
+    #suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - Best fitness %(global_fitness).5f - Average fitness %(average_fitness).5f - RMSE %(RMSE).5f - TV %(TV).5f%%'
+    suffix = '%(index)d/%(max)d - %(percent).1f%% - %(eta)ds - '\
+            'Global fitness %(global_fitness).5f -' \
+            'Enlight %(enlightment).1f%% -' \
+            'Overlap %(overlap).1f%% -' \
+            'Lamps %(lamp).5f'
     @property
     def global_fitness(self):
         global global_fitness_function;
         return global_fitness_function.global_fitness_set[-1]
 
     @property
-    def RMSE(self):
+    def enlightment(self):
         global global_fitness_function;
         return global_fitness_function.global_error_term_set[-1]
 
     @property
-    def TV(self):
+    def overlap(self):
         global global_fitness_function;
         return global_fitness_function.global_regularisation_term_set[-1]
 
     @property
-    def average_fitness(self):
-        global optimiser;
-        return optimiser.average_objective_value
+    def lamp(self):
+        global global_fitness_function;
+        return global_fitness_function.number_of_lamps_set[-1]
+
 
 def linearInterpolation(start, end, i, j):
     return start + (end - start) * (1 - (j - i) / j);
@@ -106,38 +114,39 @@ g_first_log = True;
 g_log_event = "";
 g_iteration = 0;
 
+g_best_global_fitness = 0;
+g_best_population = None;
+
 def logStatistics(aNumberOfIndividuals):
 
     global global_fitness_function;
     global g_first_log;
     global g_log_event;
     global g_iteration;
+    global g_best_global_fitness;
+    global g_best_population;
     global optimiser;
 
     if not isinstance(args.logging, NoneType):
         if g_first_log:
             g_first_log = False;
-            logging.info("generation,new_individual_counter,event,number_of_emission_points,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,Average_fitness_value,Number_of_lamps");
 
-        ref  =  global_fitness_function.ground_truth;
-        test = global_fitness_function.population_image_data;
-        MAE_reconstruction                 = IM.getMAE(ref, test);
-        MSE_reconstruction                 = IM.getMSE(ref, test);
-        RMSE_reconstruction                = IM.getRMSE(ref, test);
-        NRMSE_euclidean_reconstruction     = IM.getNRMSE_euclidean(ref, test);
-        NRMSE_mean_reconstruction          = IM.getNRMSE_mean(ref, test);
-        #NRMSE_min_max_reconstruction       = IM.getNRMSE_minMax(ref, test);
-        cosine_similarity_reconstruction   = IM.getCosineSimilarity(ref, test);
-        #mean_relative_error_reconstruction = IM.getMeanRelativeError(ref, test);
-        #max_relative_error_reconstruction  = IM.getMaxRelativeError(ref, test);
-        SSIM_reconstruction                = IM.getSSIM(ref, test);
-        #PSNR_reconstruction                = IM.getPSNR(ref, test);
-        #ZNCC_reconstruction                = IM.getNCC(ref, test);
-        TV_reconstruction                  = IM.getTV(test);
+            logging.info("generation,new_individual_counter,event,number_of_particles,number_of_lamps,global_fitness,enlightment,overlap");
 
-        #logging.info("%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (g_iteration,g_log_event,MAE_sinogram,MSE_sinogram,RMSE_sinogram,NRMSE_euclidean_sinogram,NRMSE_mean_sinogram,NRMSE_min_max_sinogram,cosine_similarity_sinogram,mean_relative_error_sinogram,max_relative_error_sinogram,SSIM_sinogram,PSNR_sinogram,ZNCC_sinogram,TV_sinogram,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,NRMSE_min_max_reconstruction,cosine_similarity_reconstruction,mean_relative_error_reconstruction,max_relative_error_reconstruction,SSIM_reconstruction,PSNR_reconstruction,ZNCC_reconstruction,TV_reconstruction));
+        logging.info("%i,%i,%s,%i,%i,%f,%f,%f" % (
+            g_iteration,
+            optimiser.number_created_particles + optimiser.number_moved_particles,
+            g_log_event,
+            aNumberOfIndividuals,
+            global_fitness_function.number_of_lamps_set[-1],
+            global_fitness_function.global_fitness_set[-1],
+            global_fitness_function.global_error_term_set[-1],
+            global_fitness_function.global_regularisation_term_set[-1]
+        ));
 
-        logging.info("%i,%i,%s,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i" % (g_iteration,optimiser.number_created_particles+optimiser.number_moved_particles,g_log_event,aNumberOfIndividuals,MAE_reconstruction,MSE_reconstruction,RMSE_reconstruction,NRMSE_euclidean_reconstruction,NRMSE_mean_reconstruction,cosine_similarity_reconstruction,SSIM_reconstruction,TV_reconstruction,optimiser.average_objective_value,global_fitness_function.getNumberOfLamps(optimiser.best_solution.parameter_set)));
+        if g_best_global_fitness < global_fitness_function.global_fitness_set[-1]:
+            g_best_global_fitness = global_fitness_function.global_fitness_set[-1];
+            g_best_population = copy.deepcopy(global_fitness_function.current_population);
 
         g_log_event="";
 
@@ -152,16 +161,6 @@ try:
     number_of_particles = args.swarm_size[0];
     number_of_iterations  = args.iterations[0];
 
-    # Log messages
-    if not isinstance(args.logging, NoneType):
-        logging.debug("Weight: %f",                args.weight[0])
-        logging.debug("Radius: %i",                args.radius[0])
-        logging.debug("Room width: %i",            args.room_width[0])
-        logging.debug("Room height: %i",           args.room_height[0])
-        logging.debug("Number of lamps: %i",       args.number_of_lamps[0])
-        logging.debug("Number of individuals: %i", number_of_particles)
-        logging.debug("Number of generations: %i", number_of_iterations)
-
     # Create test problem
     global_fitness_function = LampProblemGlobalFitness(args.radius[0],
             args.room_width[0],
@@ -172,6 +171,17 @@ try:
     global_fitness_function.save_best_solution = True;
 
 
+    # Log messages
+    if not isinstance(args.logging, NoneType):
+        logging.debug("Weight: %f",                args.weight[0])
+        logging.debug("Radius: %i",                args.radius[0])
+        logging.debug("Room width: %i",            args.room_width[0])
+        logging.debug("Room height: %i",           args.room_height[0])
+        logging.debug("Number of lamps: %i",       args.number_of_lamps[0])
+        logging.debug("Number of particles: %i",   number_of_particles)
+        logging.debug("Number of iterations: %i", number_of_iterations)
+        logging.debug("Problem size: %f", global_fitness_function.getProblemSize());
+
     # Create the optimiser
     optimiser = PSO(global_fitness_function,
         number_of_particles);
@@ -179,6 +189,7 @@ try:
     global_fitness_function.average_fitness_set.append(optimiser.average_objective_value);
     global_fitness_function.best_fitness_set.append(global_fitness_function.global_fitness_set[-1]);
     global_fitness_function.number_of_lamps_set.append(global_fitness_function.getNumberOfLamps(optimiser.best_solution.parameter_set));
+
 
     # Show the visualisation
     if args.visualisation:
@@ -205,7 +216,9 @@ try:
     run_optimisation_loop = True;
 
     # Log the statistics
-    g_log_event="Random initial swarm"; logStatistics(optimiser.getNumberOfParticles()); g_iteration += 1;
+    g_log_event="Random initial population"; logStatistics(optimiser.getNumberOfParticles()); g_iteration += 1;
+
+    print(i, optimiser.best_solution.objective);
 
     while run_optimisation_loop:
 
@@ -224,7 +237,6 @@ try:
 
             # Run the evolutionary loop
             optimiser.runIteration();
-
             global_fitness_function.average_fitness_set.append(optimiser.average_objective_value);
             global_fitness_function.best_fitness_set.append(global_fitness_function.global_fitness_set[-1]);
             global_fitness_function.number_of_lamps_set.append(global_fitness_function.getNumberOfLamps(optimiser.best_solution.parameter_set));
@@ -232,14 +244,16 @@ try:
             # Log the statistics
             g_log_event="Optimisation loop"; logStatistics(optimiser.getNumberOfParticles()); g_iteration += 1;
 
+            print(i, optimiser.best_solution.objective);
+
             # Get the current global fitness
             new_global_fitness = global_fitness_function.global_fitness_set[-1];
 
             # The population has not improved since the last check
-            if new_global_fitness >= best_global_fitness:
+            if new_global_fitness <= best_global_fitness:
                 stagnation += 1; # Increase the stagnation counter
 
-            # The swarm has improved since the last check
+            # The population has improved since the last check
             else:
                 # Reset the stagnation counter and
                 # Update the best global fitness
@@ -264,12 +278,10 @@ try:
 
                     # Update the main window
                     global_fitness_function.plot(fig, ax, i, number_of_iterations)
-                    #plt.pause(5.00)
-                    fig.canvas.draw();
-                    fig.canvas.flush_events();
-                    plt.pause(0);
-                    plt.clf();
-
+                    #fig.canvas.draw();
+                    #fig.canvas.flush_events();
+                    #plt.pause(0);
+                    #plt.clf();
                     #plt.savefig('test.eps', format='eps', bbox_inches='tight', pad_inches=1.0, dpi=600)
 
             # Increment the counter
