@@ -157,11 +157,11 @@ class LampProblemGlobalFitness(ObjectiveFunction):
 
             save_data = True;
 
-            '''if len(self.global_fitness_set) > 0 and self.save_best_solution:
+            if len(self.global_fitness_set) > 0 and self.save_best_solution:
                 if self.flag == ObjectiveFunction.MINIMISATION and self.global_fitness_set[-1] < fitness:
                     save_data = False;
                 elif self.flag == ObjectiveFunction.MAXIMISATION and self.global_fitness_set[-1] > fitness:
-                    save_data = False;'''
+                    save_data = False;
 
             if save_data:
                 self.current_population = copy.deepcopy(aParameterSet);
