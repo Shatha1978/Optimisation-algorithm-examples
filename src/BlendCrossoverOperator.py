@@ -37,8 +37,10 @@ class BlendCrossoverOperator(GeneticOperator.GeneticOperator):
         parent1_index = parent2_index = anEA.selection_operator.select(anEA.current_solution_set)
 
         # Make sure parent 1 is different from parent2
-        while parent2_index == parent1_index:
+        i = 0;
+        while parent2_index == parent1_index and i < 10:
             parent2_index = anEA.selection_operator.select(anEA.current_solution_set);
+            i += 1;
 
         # Perform the crossover
         child_gene = [];
