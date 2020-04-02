@@ -16,7 +16,7 @@ def indexOfMedian(aColumn):
 
 fig1, axs = plt.subplots(nrows=4, ncols=5, figsize=(17, 4));
 
-problem_size_set = [3, 5, 10, 20, 100];
+problem_size_set = [3, 5, 10, 20, 100, 500];
 evolution_set = ["generational", "steady_state"];
 selection_operator_set = ["tournament", "threshold"];
 
