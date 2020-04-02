@@ -63,6 +63,8 @@ def checkCommandLineArguments():
 
     parser.add_argument('--number_of_lamps', help='Number of lamps',      nargs=1, type=int, required=False);
 
+    parser.add_argument('--max_pop_size', help='Maximum number of individuals',      nargs=1, type=int, required=False);
+
     parser.add_argument('--tournament_size', help='Number of individuals involved in the tournament',      nargs=1, type=int, required=False, default=2);
 
     parser.add_argument('--generations', help='Number of generations',      nargs=1, type=int, required=True);
@@ -368,6 +370,10 @@ try:
 
                 stagnation_reached = True;
 
+                # Check the population size
+                current_population_size = optimiser.getNumberOfIndividuals();
+                target_population_size = 2 * current_population_size;
+
                 # Log message
                 if not isinstance(args.logging, NoneType):
                     stagnation_reached = True;
@@ -380,6 +386,18 @@ try:
                         logging.debug("Since the last mitosis (old global fitness: %f), the Population has not improved (new global fitness: %f)." % (global_fitness_before_mitosis, global_fitness_function.global_fitness_set[-1]));
 
                         run_optimisation_loop = False;
+
+                # There is a max population size
+                if not isinstance(args.max_pop_size, NoneType):
+
+                    # Exit the for loop
+                    if target_population_size >= args.max_pop_size[0]:
+
+                        run_optimisation_loop = False;
+
+                        # Log message
+                        if not isinstance(args.logging, NoneType):
+                            logging.debug("Stopping criteria met. Population stagnation and max population size reached. The current population size is %i, the double is %i, which is higher than the threshold %i" % (current_population_size, target_population_size, args.max_pop_size[0]));
 
                 global_fitness_before_mitosis = global_fitness_function.global_fitness_set[-1];
 
